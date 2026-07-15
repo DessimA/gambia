@@ -658,6 +658,31 @@ a {
   font-size: 0.9rem;
 }
 
+.error-title {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.error-fields {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.error-fields li {
+  padding: 0.35rem 0;
+  font-size: 0.825rem;
+  border-top: 1px solid rgba(239, 68, 68, 0.15);
+}
+
+.error-fields li:first-child {
+  border-top: none;
+}
+
+.error-fields strong {
+  font-weight: 600;
+}
+
 .result-card {
   background: var(--bg);
   border-radius: var(--radius);

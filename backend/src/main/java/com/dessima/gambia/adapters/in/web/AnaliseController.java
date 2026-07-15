@@ -3,7 +3,6 @@ package com.dessima.gambia.adapters.in.web;
 import com.dessima.gambia.adapters.in.dto.AnaliseRequest;
 import com.dessima.gambia.adapters.in.dto.AnaliseResponse;
 import com.dessima.gambia.domain.model.SolicitacaoAnalise;
-import com.dessima.gambia.domain.model.TipoImovel;
 import com.dessima.gambia.domain.ports.in.ObterAnaliseUseCase;
 import jakarta.validation.Valid;
 import java.util.Optional;
@@ -31,7 +30,7 @@ public class AnaliseController {
             request.consumo_kwh(),
             request.uso_horario_pico(),
             request.quantidade_equipamentos(),
-            TipoImovel.valueOf(request.tipo_imovel()),
+            request.tipo_imovel(),
             request.horas_alto_consumo());
 
     var resultado = useCase.executar(solicitacao);

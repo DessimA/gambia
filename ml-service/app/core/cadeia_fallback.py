@@ -28,13 +28,17 @@ async def executar_cadeia(
         logger.warning("ML classifier failed: %s", e)
         probabilidade = 0.0
 
-    # 2. Se ML tem confiança aceitável, usa resultado direto — sem LLM
+    # 2. Se ML tem confiança aceitável, usa resultado direto com recomendações do treinamento
     if probabilidade >= LIMIAR_CONFIANCA:
-        logger.info("Confiança aceitável (%.2f) — pulando LLM", probabilidade)
+        recomendacoes = classificador.obter_recomendacoes(categoria)
+        logger.info(
+            "Confiança aceitável (%.2f) — recomendações do treinamento: %s",
+            probabilidade, recomendacoes,
+        )
         return ClassificarResponse(
             categoria=categoria,
             probabilidade=round(probabilidade, 4),
-            recomendacoes=[],  # backend gera recomendações padrão
+            recomendacoes=recomendacoes,
         )
 
     # 3. Confiança baixa — tenta LLM (Groq) como fallback para classificar + recomendar
@@ -42,15 +46,12 @@ async def executar_cadeia(
     try:
         categoria, recomendacoes = await llm.classificar_e_recomendar(req)
         probabilidade = 0.85
-        logger.info("LLM fallback: %s", categoria.value)
+        classificador.armazenar_recomendacoes(categoria, recomendacoes)
+        logger.info("LLM fallback: %s — recomendações armazenadas no treinamento", categoria.value)
     except Exception as e:
         logger.warning("LLM fallback failed: %s", e)
         categoria = classificar_heuristico(req)
-        recomendacoes = [
-            "Reduzir o uso de equipamentos durante horários de pico",
-            "Avaliar aparelhos com alto consumo energético",
-            "Distribuir atividades de maior consumo ao longo do dia",
-        ]
+        recomendacoes = classificador.obter_recomendacoes(categoria)
         logger.info("Heuristic fallback: %s", categoria.value)
 
     return ClassificarResponse(

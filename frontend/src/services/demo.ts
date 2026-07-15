@@ -1,4 +1,5 @@
-import type { AnaliseRequest, AnaliseResponse } from '../types'
+import type { AnaliseRequest, AnaliseResponse, ErroResponse } from '../types'
+import { ApiError } from '../types'
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8080'
 
@@ -12,8 +13,11 @@ export async function analisarDemo(
   })
 
   if (!response.ok) {
-    const err = await response.json()
-    throw new Error(err.mensagem ?? 'Erro ao analisar consumo')
+    const err: ErroResponse = await response.json()
+    throw new ApiError(
+      err.mensagem ?? 'Erro ao analisar consumo',
+      err.campos ?? {}
+    )
   }
 
   return response.json()

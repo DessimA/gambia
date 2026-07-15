@@ -31,3 +31,13 @@ export interface ErroResponse {
   mensagem: string
   campos: Record<string, string>
 }
+
+export class ApiError extends Error {
+  campos: Record<string, string>
+
+  constructor(mensagem: string, campos: Record<string, string>) {
+    super(mensagem)
+    this.name = 'ApiError'
+    this.campos = campos
+  }
+}

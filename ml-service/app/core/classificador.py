@@ -10,11 +10,32 @@ TIPO_IMOVEL_MAP = {
     "Industria": 3, "Rural": 4, "Outro": 5,
 }
 
+RECOMENDACOES_PADRAO: dict[str, list[str]] = {
+    ClassificacaoEficiencia.Ineficiente.value: [
+        "Substituir lâmpadas incandescentes por LED",
+        "Realizar manutenção periódica em equipamentos de alto consumo",
+        "Investir em sistemas de energia solar fotovoltaica",
+    ],
+    ClassificacaoEficiencia.Moderado.value: [
+        "Reduzir o uso de equipamentos durante horários de pico",
+        "Avaliar aparelhos com alto consumo energético",
+        "Distribuir atividades de maior consumo ao longo do dia",
+    ],
+    ClassificacaoEficiencia.Eficiente.value: [
+        "Manter os hábitos atuais de consumo consciente",
+        "Acompanhar mensalmente a fatura de energia",
+        "Compartilhar práticas sustentáveis com a comunidade",
+    ],
+}
+
 
 class ClassificadorEnergia:
     def __init__(self):
         self._scaler = StandardScaler()
         self._model = self._gerar_modelo_sintetico()
+        self._recomendacoes: dict[str, list[str]] = {
+            k: list(v) for k, v in RECOMENDACOES_PADRAO.items()
+        }
 
     def _gerar_modelo_sintetico(self) -> RandomForestClassifier:
         """Gera dados sintéticos de treino com regras limiares (README §3.1.B)."""
@@ -62,3 +83,12 @@ class ClassificadorEnergia:
         pred = int(self._model.predict(x_scaled)[0])
         probas = self._model.predict_proba(x_scaled)[0]
         return ClassificacaoEficiencia(LABEL_MAP[pred]), float(max(probas))
+
+    def obter_recomendacoes(self, categoria: ClassificacaoEficiencia) -> list[str]:
+        return list(self._recomendacoes.get(categoria.value, []))
+
+    def armazenar_recomendacoes(
+        self, categoria: ClassificacaoEficiencia, recomendacoes: list[str]
+    ) -> None:
+        if recomendacoes:
+            self._recomendacoes[categoria.value] = list(recomendacoes)

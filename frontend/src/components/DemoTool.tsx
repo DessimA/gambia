@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { BarChart3 } from 'lucide-react'
 import type { AnaliseRequest, AnaliseResponse, TipoImovel } from '../types'
+import { ApiError } from '../types'
 import { analisarDemo } from '../services/demo'
 
 const TIPOS_IMOVEL: TipoImovel[] = [
@@ -13,6 +14,14 @@ const CATEGORIA_CORES: Record<string, string> = {
   Ineficiente: '#ef4444',
 }
 
+const NOME_CAMPOS: Record<string, string> = {
+  consumo_kwh: 'Consumo mensal (kWh)',
+  tipo_imovel: 'Tipo de imóvel',
+  quantidade_equipamentos: 'Quantidade de equipamentos',
+  horas_alto_consumo: 'Horas de alto consumo',
+  uso_horario_pico: 'Uso em horário de pico',
+}
+
 export default function DemoTool() {
   const [form, setForm] = useState<AnaliseRequest>({
     consumo_kwh: 300,
@@ -23,18 +32,25 @@ export default function DemoTool() {
   })
   const [resultado, setResultado] = useState<AnaliseResponse | null>(null)
   const [erro, setErro] = useState<string | null>(null)
+  const [errosCampo, setErrosCampo] = useState<Record<string, string> | null>(null)
   const [loading, setLoading] = useState(false)
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setLoading(true)
     setErro(null)
+    setErrosCampo(null)
     setResultado(null)
     try {
       const res = await analisarDemo(form)
       setResultado(res)
     } catch (err) {
-      setErro(err instanceof Error ? err.message : 'Erro desconhecido')
+      if (err instanceof ApiError) {
+        setErro(err.message)
+        setErrosCampo(err.campos)
+      } else {
+        setErro(err instanceof Error ? err.message : 'Erro desconhecido')
+      }
     } finally {
       setLoading(false)
     }
@@ -114,7 +130,16 @@ export default function DemoTool() {
 
             {erro && !loading && (
               <div className="result-error">
-                <p>{erro}</p>
+                <p className="error-title">{erro}</p>
+                {errosCampo && Object.keys(errosCampo).length > 0 && (
+                  <ul className="error-fields">
+                    {Object.entries(errosCampo).map(([campo, msg]) => (
+                      <li key={campo}>
+                        <strong>{NOME_CAMPOS[campo] ?? campo}:</strong> {msg}
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             )}
 
