@@ -14,9 +14,8 @@ TIPO_IMOVEL_MAP = {
 
 class ClassificadorEnergia:
     def __init__(self):
-        self._model = self._gerar_modelo_sintetico()
         self._scaler = StandardScaler()
-        self._features = None  # será setado no primeiro fit
+        self._model = self._gerar_modelo_sintetico()
 
     def _gerar_modelo_sintetico(self) -> RandomForestClassifier:
         """Gera dados sintéticos de treino com regras limiares (README §3.1.B)."""

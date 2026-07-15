@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request
 
-from app.models.schemas import ClassificarRequest, ClassificarResponse
 from app.core.cadeia_fallback import executar_cadeia
+from app.models.schemas import ClassificarRequest, ClassificarResponse
 
 router = APIRouter()
 

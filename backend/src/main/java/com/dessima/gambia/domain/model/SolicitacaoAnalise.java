@@ -4,10 +4,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 public record SolicitacaoAnalise(
-        Optional<UUID> imovelId,
-        double consumoKwh,
-        boolean usoHorarioPico,
-        int quantidadeEquipamentos,
-        TipoImovel tipoImovel,
-        int horasAltoConsumo
-) {}
+    Optional<UUID> imovelId,
+    double consumoKwh,
+    boolean usoHorarioPico,
+    int quantidadeEquipamentos,
+    TipoImovel tipoImovel,
+    int horasAltoConsumo) {}

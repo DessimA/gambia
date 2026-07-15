@@ -12,30 +12,30 @@ import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 @Configuration
 public class SecurityConfig {
 
-    private final JwtTokenProvider tokenProvider;
+  private final JwtTokenProvider tokenProvider;
 
-    public SecurityConfig(JwtTokenProvider tokenProvider) {
-        this.tokenProvider = tokenProvider;
-    }
+  public SecurityConfig(JwtTokenProvider tokenProvider) {
+    this.tokenProvider = tokenProvider;
+  }
 
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        var csrfHandler = new CsrfTokenRequestAttributeHandler();
-        csrfHandler.setCsrfRequestAttributeName(null);
+  @Bean
+  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    var csrfHandler = new CsrfTokenRequestAttributeHandler();
+    csrfHandler.setCsrfRequestAttributeName(null);
 
-        http
-            .cors(cors -> {})
-            .csrf(csrf -> csrf
-                    .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                    .csrfTokenRequestHandler(csrfHandler))
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/analise-energetica").authenticated()
-                    .requestMatchers("/actuator/**").permitAll()
-                    .anyRequest().permitAll())
-            .addFilterBefore(new JwtAuthenticationFilter(tokenProvider),
-                    UsernamePasswordAuthenticationFilter.class);
+    http.cors(cors -> {})
+        .csrf(
+            csrf ->
+                csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                    .csrfTokenRequestHandler(csrfHandler)
+                    .ignoringRequestMatchers("/analise-energetica"))
+        .sessionManagement(
+            session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .authorizeHttpRequests(
+            auth -> auth.requestMatchers("/actuator/**").permitAll().anyRequest().permitAll())
+        .addFilterBefore(
+            new JwtAuthenticationFilter(tokenProvider), UsernamePasswordAuthenticationFilter.class);
 
-        return http.build();
-    }
+    return http.build();
+  }
 }

@@ -4,9 +4,9 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.classificar import router as classificar_router
 from app.core.classificador import ClassificadorEnergia
 from app.core.llm_gerador import RecomendadorGroq
-from app.api.classificar import router as classificar_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

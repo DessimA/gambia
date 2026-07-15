@@ -6,7 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class GambiaApplication {
 
-    public static void main(String[] args) {
-        SpringApplication.run(GambiaApplication.class, args);
-    }
+  public static void main(String[] args) {
+    SpringApplication.run(GambiaApplication.class, args);
+  }
 }
