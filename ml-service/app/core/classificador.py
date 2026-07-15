@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
 
-from app.models.schemas import ClassificarRequest, ClassificacaoEficiencia
+from app.models.schemas import ClassificacaoEficiencia, ClassificarRequest
 
 LABEL_MAP = ["Eficiente", "Moderado", "Ineficiente"]
 TIPO_IMOVEL_MAP = {
@@ -36,14 +36,14 @@ class ClassificadorEnergia:
             else:
                 labels.append(0)
 
-        X = np.column_stack((consumo, pico, equip, tipo, horas))
-        self._scaler.fit(X)
-        X_scaled = self._scaler.transform(X)
+        x = np.column_stack((consumo, pico, equip, tipo, horas))
+        self._scaler.fit(x)
+        x_scaled = self._scaler.transform(x)
 
         model = RandomForestClassifier(
             n_estimators=100, max_depth=10, random_state=42
         )
-        model.fit(X_scaled, labels)
+        model.fit(x_scaled, labels)
         return model
 
     def _extrair_features(self, req: ClassificarRequest) -> np.ndarray:
@@ -57,8 +57,8 @@ class ClassificadorEnergia:
         ]])
 
     def classificar(self, req: ClassificarRequest) -> tuple[ClassificacaoEficiencia, float]:
-        X = self._extrair_features(req)
-        X_scaled = self._scaler.transform(X)
-        pred = int(self._model.predict(X_scaled)[0])
-        probas = self._model.predict_proba(X_scaled)[0]
+        x = self._extrair_features(req)
+        x_scaled = self._scaler.transform(x)
+        pred = int(self._model.predict(x_scaled)[0])
+        probas = self._model.predict_proba(x_scaled)[0]
         return ClassificacaoEficiencia(LABEL_MAP[pred]), float(max(probas))
