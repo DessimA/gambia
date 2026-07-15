@@ -1,0 +1,81 @@
+# --- AGENTS ---
+AGENTS.md
+
+# --- Java / Maven ---
+backend/target/
+backend/pom.xml.tag
+backend/pom.xml.releaseBackup
+backend/pom.xml.versionsBackup
+backend/pom.xml.next
+*.class
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+hs_err_pid*
+replay_pid*
+
+# --- Node / Frontend ---
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.vite/
+frontend/*.tsbuildinfo
+frontend/*.js.map
+frontend/*.d.ts.map
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.eslintcache
+*.local
+
+# --- Python / ML ---
+ml-service/__pycache__/
+ml-service/*.pyc
+ml-service/*.pyo
+ml-service/.pytest_cache/
+ml-service/.coverage
+ml-service/htmlcov/
+ml-service/coverage.xml
+ml-service/*.egg-info/
+ml-service/dist/
+ml-service/build/
+ml-service/.venv/
+ml-service/venv/
+ml-service/models/*.onnx
+ml-service/models/*.pkl
+ml-service/models/*.joblib
+ml-service/**/__pycache__/
+
+# --- Docker / Infra ---
+infra/.env
+*.log
+.env
+.env.local
+.env.*.local
+
+# --- IDE / Editor ---
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+*.swp
+*.bak
+*.tmp
+
+# --- Project specific ---
+backend/.env
+backend/.mvn/
+ml-service/.env
+frontend/.env

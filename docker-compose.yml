@@ -1,0 +1,123 @@
+version: "3.9"
+
+services:
+  postgres-db:
+    image: postgres:16-alpine
+    container_name: gambia-postgres
+    environment:
+      POSTGRES_DB: ${DB_NAME:-gambia}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres_password_alterar_aqui}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-gambia}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - gambia-net
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: gambia-backend
+    environment:
+      DB_HOST: ${DB_HOST:-postgres-db}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME:-gambia}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres_password_alterar_aqui}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-86400000}
+      ML_SERVICE_URL: ${ML_SERVICE_URL:-http://ml-service:8000}
+      OTEL_SERVICE_NAME: ${OTEL_SERVICE_NAME:-gambia-backend}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://otel-collector:4318}
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+    networks:
+      - gambia-net
+
+  ml-service:
+    build:
+      context: ./ml-service
+      dockerfile: Dockerfile
+    container_name: gambia-ml
+    environment:
+      ML_MODEL_PATH: ${ML_MODEL_PATH:-models/classifier.onnx}
+      FALLBACK_LLM_API_KEY: ${FALLBACK_LLM_API_KEY:-}
+      ENERGY_TARIFF_REFERENCE: ${ENERGY_TARIFF_REFERENCE:-0.75}
+      OTEL_SERVICE_NAME: gambia-ml
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://otel-collector:4318}
+    ports:
+      - "8000:8000"
+    networks:
+      - gambia-net
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: gambia-frontend
+    environment:
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:8080}
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    networks:
+      - gambia-net
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.104.0
+    container_name: gambia-otel
+    command: ["--config=/etc/otel-collector-config.yml"]
+    volumes:
+      - ./infra/otel/otel-collector-config.yml:/etc/otel-collector-config.yml
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+    networks:
+      - gambia-net
+
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: gambia-prometheus
+    volumes:
+      - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - promdata:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - gambia-net
+
+  grafana:
+    image: grafana/grafana:11.1.0
+    container_name: gambia-grafana
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - ./infra/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./infra/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - grafanadata:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    networks:
+      - gambia-net
+
+volumes:
+  pgdata:
+  promdata:
+  grafanadata:
+
+networks:
+  gambia-net:
+    driver: bridge
