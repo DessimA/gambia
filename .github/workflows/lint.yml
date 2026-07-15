@@ -1,0 +1,48 @@
+name: Lint
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [dev]
+
+jobs:
+  backend:
+    name: Backend (Java)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: temurin
+          cache: maven
+      - run: mvn spotless:check --no-transfer-progress
+        working-directory: backend
+      - run: mvn compile --no-transfer-progress
+        working-directory: backend
+
+  ml-service:
+    name: ML Service (Python)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install ruff
+      - run: ruff check app/
+        working-directory: ml-service
+
+  frontend:
+    name: Frontend (TypeScript)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm install
+        working-directory: frontend
+      - run: npx tsc --noEmit
+        working-directory: frontend
