@@ -13,12 +13,12 @@ sequenceDiagram
     participant BE as Backend
 
     FE->>BE: GET /login
-    BE->>BE: Gera JWT com subject "dev-user"
-    BE->>FE: "Set-Cookie: SESSION_TOKEN=&lt;jwt&gt;; HttpOnly; Path=/"
-    Note over FE: Cookie enviado automaticamente em requisicoes subsequentes
+    BE->>BE: Gera JWT (subject dev-user)
+    BE->>FE: Define cookie SESSION_TOKEN (JWT)
+    Note over FE: Cookie enviado automaticamente nas requisicoes seguintes
     FE->>BE: GET /analise-energetica (com SESSION_TOKEN)
-    BE->>BE: JwtAuthenticationFilter extrai token do cookie
-    BE->>BE: Valida assinatura + expiracao
+    BE->>BE: JwtAuthenticationFilter le o cookie
+    BE->>BE: Valida assinatura e expiracao
     BE->>BE: Seta SecurityContextHolder
     BE-->>FE: Resposta
 ```

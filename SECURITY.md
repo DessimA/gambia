@@ -1,21 +1,21 @@
-# Politica de Seguranca
+# Política de Segurança
 
-## Versoes Suportadas
+## Versões Suportadas
 
-Atualmente o GambIA esta em fase de prototipo (v0.1.0). Apenas a versao
-mais recente da branch `main` recebe atualizacoes de seguranca.
+Atualmente o GambIA está em fase de protótipo (v0.1.0). Apenas a versão
+mais recente da branch `main` recebe atualizações de segurança.
 
-| Versao | Suportada |
+| Versão | Suportada |
 |--------|-----------|
-| main (ultimo commit) | Sim |
+| main (último commit) | Sim |
 | dev | Apenas para desenvolvimento |
-| < 0.1.0 | Nao |
+| < 0.1.0 | Não |
 
 ## Reportando Vulnerabilidades
 
-Se voce descobrir uma vulnerabilidade de seguranca no GambIA, por favor
-reporte atraves dos canais abaixo. **Nao abra uma issue publica** para
-vulnerabilidades de seguranca.
+Se você descobrir uma vulnerabilidade de segurança no GambIA, por favor
+reporte através dos canais abaixo. **Não abra uma issue pública** para
+vulnerabilidades de segurança.
 
 ### Canais para Reporte
 
@@ -24,34 +24,34 @@ vulnerabilidades de seguranca.
 
 ### O que incluir no reporte
 
-- Descricao clara do problema
+- Descrição clara do problema
 - Passos para reproduzir
 - Impacto potencial
-- Sugestao de correcao (se houver)
+- Sugestão de correção (se houver)
 
-### Politica de Divulgacao
+### Política de Divulgação
 
-Apos o reporte:
+Após o reporte:
 
-1. Confirmaremos o recebimento em ate 48 horas
+1. Confirmaremos o recebimento em até 48 horas
 2. Investigaremos e trataremos o problema
-3. Manteremos voce informado sobre o progresso
-4. Publicaremos uma correcao assim que disponivel
+3. Manteremos você informado sobre o progresso
+4. Publicaremos uma correção assim que disponível
 
-## Praticas de Seguranca Atuais
+## Práticas de Segurança Atuais
 
-- JWT armazenado em cookie httpOnly (nao acessivel via JavaScript)
-- CSRF Double Submit Cookie com cookie `XSRF-TOKEN` nao-httpOnly
+- JWT armazenado em cookie httpOnly (não acessível via JavaScript)
+- CSRF Double Submit Cookie com cookie `XSRF-TOKEN` não-httpOnly
 - CORS restrito a origens conhecidas
-- Sessoes stateless (sem sessao no servidor)
-- Validacao de entrada com Bean Validation (backend)
-- Validacao de dados com Pydantic (ML service)
-- PostgreSQL com usuario e senha configurados via ambiente
-- Dependencias gerenciadas via Maven, npm e pip com versoes fixadas
+- Sessões stateless (sem sessão no servidor)
+- Validação de entrada com Bean Validation (backend)
+- Validação de dados com Pydantic (ML service)
+- PostgreSQL com usuário e senha configurados via ambiente
+- Dependências gerenciadas via Maven, npm e pip com versões fixadas
 
-## Dependencias
+## Dependências
 
-Mantenha as dependencias atualizadas executando periodicamente:
+Mantenha as dependências atualizadas executando periodicamente:
 
 ```bash
 # Backend
