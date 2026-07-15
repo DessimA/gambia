@@ -4,7 +4,7 @@ from typing import List
 from app.core.classificador import ClassificadorEnergia
 from app.core.heuristica import classificar_heuristico
 from app.core.llm_gerador import RecomendadorGroq
-from app.models.schemas import ClassificarRequest, ClassificarResponse, ClassificacaoEficiencia
+from app.models.schemas import ClassificacaoEficiencia, ClassificarRequest, ClassificarResponse
 
 logger = logging.getLogger(__name__)
 

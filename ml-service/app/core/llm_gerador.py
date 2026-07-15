@@ -1,11 +1,11 @@
-import os
 import logging
+import os
 import re
 from typing import List, Tuple
 
 from groq import AsyncGroq
 
-from app.models.schemas import ClassificarRequest, ClassificacaoEficiencia
+from app.models.schemas import ClassificacaoEficiencia, ClassificarRequest
 
 logger = logging.getLogger(__name__)
 
