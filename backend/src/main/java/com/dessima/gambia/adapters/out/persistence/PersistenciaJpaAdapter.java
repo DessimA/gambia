@@ -27,7 +27,11 @@ public class PersistenciaJpaAdapter implements PersistenciaPort {
   public UUID salvarImovel(SolicitacaoAnalise solicitacao) {
     var id = solicitacao.imovelId().orElse(UUID.randomUUID());
     var entity =
-        new ImovelEntity(id, solicitacao.tipoImovel().name(), solicitacao.quantidadeEquipamentos());
+        new ImovelEntity(
+            id,
+            solicitacao.tipoImovel().name(),
+            solicitacao.quantidadeEquipamentos(),
+            solicitacao.usuarioId().orElse(null));
     imovelRepository.save(entity);
     return id;
   }

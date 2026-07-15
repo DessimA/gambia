@@ -19,16 +19,20 @@ public class ImovelEntity {
   @Column(name = "quantidade_equipamentos", nullable = false)
   private int quantidadeEquipamentos;
 
+  @Column(name = "usuario_id")
+  private UUID usuarioId;
+
   @Column(name = "created_at", nullable = false, updatable = false)
   private Instant createdAt;
 
   @Deprecated
   protected ImovelEntity() {}
 
-  public ImovelEntity(UUID id, String tipoImovel, int quantidadeEquipamentos) {
+  public ImovelEntity(UUID id, String tipoImovel, int quantidadeEquipamentos, UUID usuarioId) {
     this.id = id;
     this.tipoImovel = tipoImovel;
     this.quantidadeEquipamentos = quantidadeEquipamentos;
+    this.usuarioId = usuarioId;
     this.createdAt = Instant.now();
   }
 
@@ -42,6 +46,10 @@ public class ImovelEntity {
 
   public int getQuantidadeEquipamentos() {
     return quantidadeEquipamentos;
+  }
+
+  public UUID getUsuarioId() {
+    return usuarioId;
   }
 
   public Instant getCreatedAt() {

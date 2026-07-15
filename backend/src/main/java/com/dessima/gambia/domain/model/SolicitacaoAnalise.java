@@ -9,4 +9,5 @@ public record SolicitacaoAnalise(
     boolean usoHorarioPico,
     int quantidadeEquipamentos,
     TipoImovel tipoImovel,
-    int horasAltoConsumo) {}
+    int horasAltoConsumo,
+    Optional<UUID> usuarioId) {}
