@@ -3,8 +3,8 @@
 ## Tecnologias
 
 - PostgreSQL 16 (container `postgres:16-alpine`)
-- Flyway 10.20.x (migracoes versionadas)
-- UUID como chave primaria
+- Flyway 10.20.x (migrações versionadas)
+- UUID como chave primária
 - Prefixo `tb_` para todas as tabelas
 
 ## Modelo Entidade-Relacionamento
@@ -42,7 +42,7 @@ erDiagram
     tb_analise_consumo ||--o{ tb_recomendacao_gerada : "1:N"
 ```
 
-## Migracao V001 (Flyway)
+## Migração V001 (Flyway)
 
 ```sql
 CREATE TABLE tb_imovel (
@@ -77,52 +77,52 @@ CREATE TABLE tb_recomendacao_gerada (
 CREATE INDEX idx_recom_analise ON tb_recomendacao_gerada(analise_id);
 ```
 
-## Descricao das Tabelas
+## Descrição das Tabelas
 
 ### tb_imovel
 
-Cadastro basico do imovel analisado.
+Cadastro básico do imóvel analisado.
 
-| Coluna | Tipo | Descricao |
+| Coluna | Tipo | Descrição |
 |--------|------|-----------|
-| id | UUID | Chave primaria |
-| tipo_imovel | VARCHAR(50) | Casa, Apartamento, Comercio, Industria, Rural, Outro |
-| quantidade_equipamentos | INT | Quantidade de aparelhos eletricos |
-| created_at | TIMESTAMPTZ | Data de criacao |
+| id | UUID | Chave primária |
+| tipo_imovel | VARCHAR(50) | Casa, Apartamento, Comércio, Indústria, Rural, Outro |
+| quantidade_equipamentos | INT | Quantidade de aparelhos elétricos |
+| created_at | TIMESTAMPTZ | Data de criação |
 
 ### tb_analise_consumo
 
-Historico de leituras e estimativas de consumo.
+Histórico de leituras e estimativas de consumo.
 
-| Coluna | Tipo | Descricao |
+| Coluna | Tipo | Descrição |
 |--------|------|-----------|
-| id | UUID | Chave primaria |
+| id | UUID | Chave primária |
 | imovel_id | UUID | FK para tb_imovel (ON DELETE CASCADE) |
 | consumo_kwh | NUMERIC(10,2) | Consumo mensal em kWh |
-| uso_horario_pico | BOOLEAN | Uso no horario de pico (18h-21h) |
-| horas_alto_consumo | INT | Media diaria de alto consumo |
+| uso_horario_pico | BOOLEAN | Uso no horário de pico (18h-21h) |
+| horas_alto_consumo | INT | Média diária de alto consumo |
 | categoria | VARCHAR(30) | Eficiente, Moderado, Ineficiente |
-| probabilidade | NUMERIC(5,4) | Confianca da classificacao |
+| probabilidade | NUMERIC(5,4) | Confiança da classificação |
 | custo_estimado_mensal | NUMERIC(10,2) | R$ (consumo * 0,75) |
 | emissao_co2_kg | NUMERIC(10,3) | kg CO2 (consumo * 0,0385) |
-| created_at | TIMESTAMPTZ | Data de criacao |
+| created_at | TIMESTAMPTZ | Data de criação |
 
-Indice: `idx_analise_imovel` em `imovel_id`.
+Índice: `idx_analise_imovel` em `imovel_id`.
 
 ### tb_recomendacao_gerada
 
-Recomendacoes geradas pelo LLM para cada analise.
+Recomendações geradas pelo LLM para cada análise.
 
-| Coluna | Tipo | Descricao |
+| Coluna | Tipo | Descrição |
 |--------|------|-----------|
-| id | UUID | Chave primaria |
+| id | UUID | Chave primária |
 | analise_id | UUID | FK para tb_analise_consumo (ON DELETE CASCADE) |
-| recomendacao_texto | TEXT | Texto da recomendacao |
-| created_at | TIMESTAMPTZ | Data de criacao |
+| recomendacao_texto | TEXT | Texto da recomendação |
+| created_at | TIMESTAMPTZ | Data de criação |
 
-Indice: `idx_recom_analise` em `analise_id`.
+Índice: `idx_recom_analise` em `analise_id`.
 
-## Configuracao Flyway
+## Configuração Flyway
 
 ```yaml
 # application.yml
@@ -135,4 +135,4 @@ spring:
       ddl-auto: validate  # Nao cria tabelas, apenas valida
 ```
 
-As migracoes estao em `backend/src/main/resources/db/migration/`.
+As migrações estão em `backend/src/main/resources/db/migration/`.

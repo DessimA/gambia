@@ -2,7 +2,7 @@
 
 ## Docker Compose
 
-Orquestra 7 servicos em uma rede interna (`gambia-net`).
+Orquestra 7 serviços em uma rede interna (`gambia-net`).
 
 ```mermaid
 flowchart TD
@@ -35,9 +35,9 @@ flowchart TD
     PROM --> GRAF
 ```
 
-### Dependencias entre Servicos
+### Dependências entre Serviços
 
-| Servico | Depende de | Condicao |
+| Serviço | Depende de | Condição |
 |---------|------------|----------|
 | postgres-db | - | - |
 | backend | postgres-db | service_healthy |
@@ -49,30 +49,30 @@ flowchart TD
 
 ### Volumes Persistentes
 
-| Volume | Montagem | Servico |
+| Volume | Montagem | Serviço |
 |--------|----------|---------|
 | `pgdata` | `/var/lib/postgresql/data` | postgres-db |
 | `promdata` | `/prometheus` | prometheus |
 | `grafanadata` | `/var/lib/grafana` | grafana |
 
-## Variaveis de Ambiente
+## Variáveis de Ambiente
 
 Gerenciadas via `.env` na raiz do projeto (copiado de `.env.example`).
 
-| Variavel | Default | Servico | Descricao |
+| Variável | Default | Serviço | Descrição |
 |----------|---------|---------|-----------|
 | `DB_HOST` | postgres-db | backend | Host do PostgreSQL |
 | `DB_PORT` | 5432 | backend | Porta do PostgreSQL |
 | `DB_NAME` | gambia | backend | Nome do banco |
-| `DB_USER` | postgres | backend | Usuario do banco |
+| `DB_USER` | postgres | backend | Usuário do banco |
 | `DB_PASSWORD` | - | backend | Senha do banco |
 | `JWT_SECRET_KEY` | - | backend | Chave de assinatura JWT |
-| `JWT_EXPIRATION_MS` | 86400000 | backend | Expiracao do token (24h) |
+| `JWT_EXPIRATION_MS` | 86400000 | backend | Expiração do token (24h) |
 | `ML_SERVICE_URL` | http://ml-service:8000 | backend | URL do ML Service interno |
 | `VITE_API_URL` | http://localhost:8080 | frontend | URL do backend para o navegador |
 | `GROQ_API_KEY` | (vazio) | ml-service | Chave da API Groq |
 | `GROQ_MODEL_ID` | llama-3.3-70b-versatile | ml-service | Modelo LLM |
-| `ENERGY_TARIFF_REFERENCE` | 0.75 | ml-service | Tarifa de referencia |
+| `ENERGY_TARIFF_REFERENCE` | 0.75 | ml-service | Tarifa de referência |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | http://otel-collector:4318 | backend, ml | Endpoint OTLP |
 
 ## Observabilidade
@@ -81,16 +81,16 @@ Gerenciadas via `.env` na raiz do projeto (copiado de `.env.example`).
 
 - Imagem: `otel/opentelemetry-collector-contrib:0.104.0`
 - Portas: 4317 (gRPC), 4318 (HTTP)
-- Configuracao: `infra/otel/otel-collector-config.yml`
-- Recebe tracos/metricas do backend e ML service
+- Configuração: `infra/otel/otel-collector-config.yml`
+- Recebe traços/métricas do backend e ML service
 - Encaminha para Prometheus
 
 ### Prometheus
 
 - Imagem: `prom/prometheus:v2.53.0`
 - Porta: 9090
-- Configuracao: `infra/prometheus/prometheus.yml`
-- Armazena metricas do OTEL collector
+- Configuração: `infra/prometheus/prometheus.yml`
+- Armazena métricas do OTEL collector
 
 ### Grafana
 
@@ -119,10 +119,10 @@ jobs:
   frontend:    # tsc --noEmit (Node 20)
 ```
 
-### Historico de Execucoes
+### Histórico de Execuções
 
-| Commit | Status | Observacao |
+| Commit | Status | Observação |
 |--------|--------|------------|
-| `3b58e60` | Passou | Ultimo commit aprovado no lint |
+| `3b58e60` | Passou | Último commit aprovado no lint |
 | `8dbcd31` | Falhou | Ruff I001 em heuristica.py (corrigido) |
 | `d7e9309` | Falhou | Ruff N806 em classificador.py (corrigido) |

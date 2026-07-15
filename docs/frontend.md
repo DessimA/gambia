@@ -13,15 +13,15 @@ frontend/src/
 +-- types/
 |   +-- index.ts                 # Interfaces TypeScript
 +-- services/
-|   +-- demo.ts                  # Chamada publica (sem auth)
+|   +-- demo.ts                  # Chamada pública (sem auth)
 |   +-- api.ts                   # Chamada autenticada (com CSRF + cookies)
 +-- components/
-|   +-- Logo.tsx                 # SVG personalizado (arvore + letra G)
-|   +-- Navbar.tsx               # Navegacao com toggle de tema
-|   +-- Hero.tsx                 # Secao hero com gradientes animados
-|   +-- DemoTool.tsx             # Formulario de demonstracao
+|   +-- Logo.tsx                 # SVG personalizado (árvore + letra G)
+|   +-- Navbar.tsx               # Navegação com toggle de tema
+|   +-- Hero.tsx                 # Seção hero com gradientes animados
+|   +-- DemoTool.tsx             # Formulário de demonstração
 |   +-- FeatureCards.tsx         # Bento grid de funcionalidades
-|   +-- Footer.tsx               # Rodape
+|   +-- Footer.tsx               # Rodapé
 +-- pages/
     +-- Home.tsx                 # Landing page completa
     +-- Login.tsx                # Placeholder "Em Breve"
@@ -30,7 +30,7 @@ frontend/src/
 
 ## Rotas
 
-| Rota | Pagina | Descricao |
+| Rota | Página | Descrição |
 |------|--------|-----------|
 | `/` | Home | Landing page com Hero + Demo + Features + Footer |
 | `/login` | Login | Placeholder com "Em Breve" (inputs disabled) |
@@ -40,13 +40,13 @@ frontend/src/
 
 ### ThemeContext
 
-- Persiste preferencia em `localStorage` com chave `gambia-theme`
+- Persiste preferência em `localStorage` com chave `gambia-theme`
 - Detecta `prefers-color-scheme` como fallback inicial
 - Define atributo `data-theme` no `<html>`
 
 ### Cores do Tema "Energia Verde"
 
-| Variavel | Claro | Escuro |
+| Variável | Claro | Escuro |
 |----------|-------|--------|
 | `--primary` | `#059669` (emerald-600) | `#34d399` (emerald-400) |
 | `--bg` | `#f9fafb` (gray-50) | `#0a0f1e` (slate-950) |
@@ -54,7 +54,7 @@ frontend/src/
 | `--text` | `#111827` (gray-900) | `#f1f5f9` (slate-100) |
 | `--accent` | `#f59e0b` (amber-500) | `#fbbf24` (amber-400) |
 
-### Componentes com transicao suave
+### Componentes com transição suave
 
 - Navbar com glassmorphism (`backdrop-filter: blur(16px)`)
 - Hero com gradientes radiais animados e formas flutuantes
@@ -65,46 +65,46 @@ frontend/src/
 
 `Logo.tsx` renderiza um SVG de 120x120 contendo:
 
-- Canopy: 3 circulos verdes sobrepostos simulando copa de arvore
+- Canopy: 3 círculos verdes sobrepostos simulando copa de árvore
 - Destaques internos em verde claro
 - Letra "G" em negativo (branco) no centro da copa
 - Tronco marrom (`#047857`)
-- Raizes laterais
+- Raízes laterais
 
-Tambem exporta `logoFaviconSvg()` para uso no `index.html`.
+Também exporta `logoFaviconSvg()` para uso no `index.html`.
 
 ## DemoTool
 
-Formulario publico de demonstracao com:
+Formulário público de demonstração com:
 
 | Campo | Tipo | Default |
 |-------|------|---------|
 | consumo_kwh | input number (min 0, step 0.01) | 300 |
-| tipo_imovel | select (6 opcoes) | Casa |
+| tipo_imovel | select (6 opções) | Casa |
 | quantidade_equipamentos | input number (1-100) | 8 |
 | uso_horario_pico | checkbox | false |
 
-Acesso avulso de `horas_alto_consumo` e feito via o state interno do form,
+Acesso avulso de `horas_alto_consumo` é feito via o state interno do form,
 embora o campo seja enviado sempre como 6 (hardcoded no state inicial).
 
-Apos submit, exibe:
+Após submit, exibe:
 
 - Badge colorido com a categoria (verde/amarelo/vermelho)
-- Confianca em percentual
+- Confiança em percentual
 - Custo estimado em R$
-- Lista de recomendacoes com borda verde
+- Lista de recomendações com borda verde
 
 ## Services
 
-### demo.ts (Publico)
+### demo.ts (Público)
 
 ```typescript
 async function analisarDemo(data: AnaliseRequest): Promise<AnaliseResponse>
 ```
 
-- Chama `POST /analise-energetica` sem headers de autenticacao
+- Chama `POST /analise-energetica` sem headers de autenticação
 - Usa `VITE_API_URL` como base (default `http://localhost:8080`)
-- Lanca erro com mensagem do backend em caso de falha
+- Lança erro com mensagem do backend em caso de falha
 
 ### api.ts (Autenticado)
 
@@ -113,8 +113,8 @@ async function analisarEnergia(data: AnaliseRequest): Promise<AnaliseResponse>
 async function login(): Promise<void>
 ```
 
-- Le cookie `XSRF-TOKEN` e envia como header `X-XSRF-TOKEN`
-- Inclui `credentials: include` para cookies de sessao
+- Lê cookie `XSRF-TOKEN` e envia como header `X-XSRF-TOKEN`
+- Inclui `credentials: include` para cookies de sessão
 - `login()` faz GET para `/login` para obter cookie JWT
 
 ## Tipos Compartilhados

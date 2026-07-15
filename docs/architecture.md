@@ -1,9 +1,9 @@
 # Arquitetura do Sistema
 
-## Visao Geral
+## Visão Geral
 
-O GambIA opera sob um modelo de microsservicos integrados, distribuido em
-tres camadas funcionais, todos orquestrados via Docker Compose.
+O GambIA opera sob um modelo de microsserviços integrados, distribuído em
+três camadas funcionais, todos orquestrados via Docker Compose.
 
 ```mermaid
 flowchart TD
@@ -40,7 +40,7 @@ flowchart TD
     G --> H
 ```
 
-## Fluxo de Dados de uma Requisicao
+## Fluxo de Dados de uma Requisição
 
 ```mermaid
 sequenceDiagram
@@ -115,7 +115,7 @@ flowchart TD
 
 ## Portas e URLs de Acesso
 
-| Servico | URL Local | Container |
+| Serviço | URL Local | Container |
 |---------|-----------|-----------|
 | Frontend | `http://localhost:5173` | gambia-frontend |
 | Backend API | `http://localhost:8080` | gambia-backend |

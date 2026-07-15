@@ -17,7 +17,7 @@ ml-service/
 |   |   +-- classificador.py    # ClassificadorEnergia (Random Forest)
 |   |   +-- cadeia_fallback.py  # Cadeia: ML -> LLM -> Heuristica
 |   |   +-- llm_gerador.py      # RecomendadorGroq
-|   |   +-- heuristica.py       # Fallback deterministico
+|   |   +-- heuristica.py       # Fallback determinístico
 |   +-- models/
 |       +-- __init__.py
 |       +-- schemas.py          # Pydantic models
@@ -61,7 +61,7 @@ Response:
 
 ## Cadeia de Fallback
 
-A logica de classificacao segue tres niveis de fallback:
+A lógica de classificação segue três níveis de fallback:
 
 ```mermaid
 flowchart TD
@@ -81,9 +81,9 @@ flowchart TD
 
 ## ClassificadorEnergia
 
-### Treinamento Sintetico
+### Treinamento Sintético
 
-Gera 500 amostras sinteticas com regras limiares:
+Gera 500 amostras sintéticas com regras limiares:
 
 ```python
 consumo > 400 and horas > 6 and pico  -> Ineficiente
@@ -93,31 +93,31 @@ otherwise                              -> Eficiente
 
 ### Features (5 atributos)
 
-| Feature | Tipo | Descricao |
+| Feature | Tipo | Descrição |
 |---------|------|-----------|
 | consumo_kwh | float | Volume mensal de consumo |
-| uso_horario_pico | int (0/1) | Uso no horario de pico (18h-21h) |
+| uso_horario_pico | int (0/1) | Uso no horário de pico (18h-21h) |
 | quantidade_equipamentos | int | Total de aparelhos |
-| tipo_imovel | int (0-5) | Categoria do imovel (one-hot encoded) |
-| horas_alto_consumo | float | Media diaria de alto consumo |
+| tipo_imovel | int (0-5) | Categoria do imóvel (one-hot encoded) |
+| horas_alto_consumo | float | Média diária de alto consumo |
 
 ### Algoritmo
 
 - Random Forest Classifier (scikit-learn)
-- 100 arvores (n_estimators), profundidade maxima 10
-- StandardScaler para normalizacao
+- 100 árvores (n_estimators), profundidade máxima 10
+- StandardScaler para normalização
 - random_state=42 para reproducibilidade
 
 ## LLM Gerador (Groq)
 
-### Configuracao
+### Configuração
 
-| Variavel | Default | Descricao |
+| Variável | Default | Descrição |
 |----------|---------|-----------|
 | `GROQ_API_KEY` | (vazio) | Chave de API Groq |
 | `GROQ_MODEL_ID` | `llama-3.3-70b-versatile` | Modelo LLM |
 
-Sem `GROQ_API_KEY`, o LLM e desabilitado e o fallback vai direto para a heuristica.
+Sem `GROQ_API_KEY`, o LLM é desabilitado e o fallback vai direto para a heurística.
 
 ### Prompt System (classificar_e_recomendar)
 
@@ -135,9 +135,9 @@ RECOMENDACOES:
 - <recomendacao 3>
 ```
 
-### Prompt System (gerar recomendacoes)
+### Prompt System (gerar recomendações)
 
-Usado quando o classificador ja definiu a categoria (fluxo normal).
+Usado quando o classificador já definiu a categoria (fluxo normal).
 
 ```
 Voce e um assistente especialista em sustentabilidade e eficiencia
@@ -148,9 +148,9 @@ numeracao, sem marcadores e sem textos explicativos adicionais antes
 ou depois.
 ```
 
-## Heuristica Deterministica (Ultimo Fallback)
+## Heurística Determinística (Último Fallback)
 
-Regras de negocio estaticas quando ML e LLM falham:
+Regras de negócio estáticas quando ML e LLM falham:
 
 ```python
 consumo > 400 and horas > 6 and pico  -> Ineficiente
@@ -160,8 +160,8 @@ otherwise                              -> Eficiente
 
 ## Constantes
 
-| Constante | Valor | Descricao |
+| Constante | Valor | Descrição |
 |-----------|-------|-----------|
-| Tarifa de referencia | R$ 0,75/kWh | Usada no backend (nao no ML) |
-| Fator CO2 | 0,0385 kg/kWh | Usado no backend (nao no ML) |
-| Limiar de confianca | 0.80 | Minimo para pular LLM |
+| Tarifa de referência | R$ 0,75/kWh | Usada no backend (não no ML) |
+| Fator CO2 | 0,0385 kg/kWh | Usado no backend (não no ML) |
+| Limiar de confiança | 0.80 | Mínimo para pular LLM |

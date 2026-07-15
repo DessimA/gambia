@@ -7,20 +7,20 @@ backend/src/main/java/com/dessima/gambia/
 |
 +-- GambiaApplication.java
 |
-+-- domain/                          # Nucleo da Aplicacao (Core)
-|   +-- model/                       # Entidades de Dominio
-|   |   +-- SolicitacaoAnalise.java  # Record: dados de entrada da analise
++-- domain/                          # Núcleo da Aplicação (Core)
+|   +-- model/                       # Entidades de Domínio
+|   |   +-- SolicitacaoAnalise.java  # Record: dados de entrada da análise
 |   |   +-- ResultadoAnalise.java    # Record: resultado consolidado
 |   |   +-- ClassificacaoEficiencia.java  # Enum: Eficiente, Moderado, Ineficiente
-|   |   +-- TipoImovel.java          # Enum: Casa, Apartamento, Comercio, ...
+|   |   +-- TipoImovel.java          # Enum: Casa, Apartamento, Comércio, ...
 |   +-- ports/
 |   |   +-- in/
 |   |   |   +-- ObterAnaliseUseCase.java  # Interface do caso de uso
 |   |   +-- out/
 |   |       +-- MLClientPort.java         # SPI para chamada ao ML
-|   |       +-- PersistenciaPort.java     # SPI para persistencia
+|   |       +-- PersistenciaPort.java     # SPI para persistência
 |   +-- service/
-|       +-- AnaliseEnergiaService.java    # Implementacao do caso de uso
+|       +-- AnaliseEnergiaService.java    # Implementação do caso de uso
 |
 +-- adapters/
     +-- config/
@@ -29,19 +29,19 @@ backend/src/main/java/com/dessima/gambia/
     |   +-- dto/
     |   |   +-- AnaliseRequest.java       # Record com Bean Validation
     |   |   +-- AnaliseResponse.java      # Record de resposta
-    |   |   +-- ErroResponse.java         # Record de erro padrao
+    |   |   +-- ErroResponse.java         # Record de erro padrão
     |   +-- security/
     |   |   +-- CorsConfig.java           # CORS para localhost:5173
     |   |   +-- SecurityConfig.java       # Spring Security + CSRF
-    |   |   +-- JwtTokenProvider.java     # Geracao/validacao de JWT
-    |   |   +-- JwtAuthenticationFilter.java  # Filtro de autenticacao
+    |   |   +-- JwtTokenProvider.java     # Geração/validação de JWT
+    |   |   +-- JwtAuthenticationFilter.java  # Filtro de autenticação
     |   +-- web/
     |       +-- AnaliseController.java    # POST /analise-energetica
     |       +-- AuthController.java       # GET /login (dev JWT)
     |       +-- GlobalExceptionHandler.java   # Tratamento de erros
-    +-- out/                        # Adaptadores de Saida
+    +-- out/                        # Adaptadores de Saída
         +-- client/
-        |   +-- MLServiceClient.java       # Implementacao do MLClientPort
+        |   +-- MLServiceClient.java       # Implementação do MLClientPort
         |   +-- MLServiceHttpClient.java   # Cliente HTTP para ML Service
         +-- persistence/
             +-- ImovelEntity.java          # JPA Entity: tb_imovel
@@ -50,7 +50,7 @@ backend/src/main/java/com/dessima/gambia/
             +-- ImovelRepository.java      # JPA Repository
             +-- AnaliseConsumoRepository.java  # JPA Repository
             +-- RecomendacaoGeradaRepository.java  # JPA Repository
-            +-- PersistenciaJpaAdapter.java    # Implementacao da PersistenciaPort
+            +-- PersistenciaJpaAdapter.java    # Implementação da PersistênciaPort
 ```
 
 ## Endpoint: POST /analise-energetica
@@ -68,7 +68,7 @@ backend/src/main/java/com/dessima/gambia/
 }
 ```
 
-### Regras de Validacao (Bean Validation)
+### Regras de Validação (Bean Validation)
 
 | Campo | Regras |
 |-------|--------|
@@ -107,18 +107,18 @@ backend/src/main/java/com/dessima/gambia/
 }
 ```
 
-## Servico de Dominio: AnaliseEnergiaService
+## Serviço de Domínio: AnaliseEnergiaService
 
-Fluxo de execucao:
+Fluxo de execução:
 
 1. Recebe `SolicitacaoAnalise` do controller
 2. Chama `MLClientPort.classificar()` que encaminha ao ML Service
 3. Calcula custo estimado: `consumo_kwh * R$ 0,75`
-4. Calcula emissao CO2: `consumo_kwh * 0,0385 kg/kWh`
+4. Calcula emissão CO2: `consumo_kwh * 0,0385 kg/kWh`
 5. Persiste dados via `PersistenciaPort`:
-   - Salva/atualiza imovel em `tb_imovel`
-   - Salva analise em `tb_analise_consumo`
-   - Salva recomendacoes em `tb_recomendacao_gerada`
+    - Salva/atualiza imóvel em `tb_imovel`
+    - Salva análise em `tb_analise_consumo`
+    - Salva recomendações em `tb_recomendacao_gerada`
 6. Retorna `ResultadoAnalise` completo
 
 ## Tratamento de Erros
@@ -126,10 +126,10 @@ Fluxo de execucao:
 `GlobalExceptionHandler` (RestControllerAdvice) captura:
 
 - `MethodArgumentNotValidException` -> 400 com mapa de campos
-- `IllegalArgumentException` -> 400 (ex: tipo_imovel invalido)
-- `Exception` -> 500 generico
+- `IllegalArgumentException` -> 400 (ex: tipo_imovel inválido)
+- `Exception` -> 500 genérico
 
 ## Endpoint: GET /login
 
-Endpoint temporario de dev que gera um JWT e o define como cookie
-`SESSION_TOKEN` (httpOnly). Sem autenticacao real neste prototipo.
+Endpoint temporário de dev que gera um JWT e o define como cookie
+`SESSION_TOKEN` (httpOnly). Sem autenticação real neste protótipo.

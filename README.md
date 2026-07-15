@@ -222,7 +222,7 @@ O payload enviado pela aplicação cliente deve conter as seguintes chaves obrig
 * `consumo_kwh`: Obrigatório (`@NotNull`), deve ser maior que zero (`@Positive`).
 * `uso_horario_pico`: Obrigatório (`@NotNull`).
 * `quantidade_equipamentos`: Obrigatório, deve ser maior ou igual a zero (`@Min(0)`).
-* `tipo_imovel`: Obrigatório, não nulo ou em branco (`@NotBlank`), limitando-se aos valores cadastrados no dicionário de dados (ex: "Casa", "Apartamento", "Comercio").
+* `tipo_imovel`: Obrigatório, não nulo ou em branco (`@NotBlank`), limitando-se aos valores cadastrados no dicionário de dados (ex: "Casa", "Apartamento", "Comércio").
 * `horas_alto_consumo`: Obrigatório, deve estar contido no intervalo de 0 a 24 horas (`@Min(0)`, `@Max(24)`).
 
 ---
