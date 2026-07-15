@@ -31,6 +31,30 @@ export async function analisarEnergia(
   return response.json()
 }
 
-export async function login(): Promise<void> {
-  await fetch(`${API_URL}/login`, { credentials: 'include' })
+export async function login(email: string, senha: string): Promise<void> {
+  const response = await fetch(`${API_URL}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ email, senha }),
+  })
+
+  if (!response.ok) {
+    const err = await response.json()
+    throw new Error(err.mensagem ?? 'Erro ao fazer login')
+  }
+}
+
+export async function cadastrar(nome: string, email: string, senha: string): Promise<void> {
+  const response = await fetch(`${API_URL}/auth/cadastrar`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ nome, email, senha }),
+  })
+
+  if (!response.ok) {
+    const err = await response.json()
+    throw new Error(err.mensagem ?? 'Erro ao cadastrar')
+  }
 }
