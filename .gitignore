@@ -3,6 +3,7 @@ AGENTS.md
 
 # --- Java / Maven ---
 backend/target/
+backend/bin/
 backend/pom.xml.tag
 backend/pom.xml.releaseBackup
 backend/pom.xml.versionsBackup
