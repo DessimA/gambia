@@ -2,34 +2,36 @@ import os
 import logging
 from typing import List
 
+from groq import AsyncGroq
+
 from app.models.schemas import ClassificarRequest, ClassificacaoEficiencia
 
 logger = logging.getLogger(__name__)
 
+SYSTEM_PROMPT = (
+    "Você é um assistente especialista em sustentabilidade e eficiência "
+    "energética residencial. Com base nos dados que eu fornecer, gere "
+    "exatamente 3 recomendações de economia de energia curtas, práticas e "
+    "diretas em português. Retorne estritamente um item por linha, sem "
+    "numeração, sem marcadores e sem textos explicativos adicionais antes "
+    "ou depois."
+)
 
-class RecomendadorLLM:
-    """Gera recomendações usando Qwen2.5-1.5B-Instruct via llama.cpp ou similar.
+MODELO_PADRAO = "llama-3.3-70b-versatile"
 
-    Nota: O carregamento real do modelo requer ~3 GB RAM (FP16).
-    Esta implementação usa fallback para respostas padrão caso o
-    modelo não esteja disponível.
-    """
 
-    def __init__(self, model_path: str | None = None):
-        self._model_path = model_path
-        self._model = None
-        self._disponivel = False
+class RecomendadorGroq:
+    """Gera recomendações via Groq API (OpenAI-compatible)."""
 
-    async def carregar(self):
-        """Tenta carregar o modelo Qwen. Se falhar, opera sem ele."""
-        try:
-            if self._model_path and os.path.exists(self._model_path):
-                logger.info("LLM model found at %s", self._model_path)
-                self._disponivel = True
-            else:
-                logger.warning("LLM model not found, using fallback")
-        except Exception as e:
-            logger.warning("Failed to load LLM: %s", e)
+    def __init__(self):
+        api_key = os.environ.get("GROQ_API_KEY", "")
+        self._modelo = os.environ.get("GROQ_MODEL_ID", MODELO_PADRAO)
+        self._disponivel = bool(api_key)
+        if self._disponivel:
+            self._client = AsyncGroq(api_key=api_key)
+        else:
+            self._client = None
+            logger.warning("GROQ_API_KEY not set — LLM will use static fallback")
 
     async def gerar(
         self,
@@ -40,21 +42,40 @@ class RecomendadorLLM:
             try:
                 return await self._inferir(req, categoria)
             except Exception as e:
-                logger.error("LLM inference failed: %s", e)
-        return self._recomendacoes_padrao(req, categoria)
+                logger.error("Groq API call failed: %s", e)
+        return self._recomendacoes_padrao(categoria)
 
     async def _inferir(
         self,
         req: ClassificarRequest,
         categoria: ClassificacaoEficiencia,
     ) -> List[str]:
-        raise NotImplementedError("Real LLM inference requires Qwen model deployment")
+        user_prompt = (
+            f"Dados do imóvel: consumo: {req.consumo_kwh:.0f}kWh, "
+            f"categoria de eficiência do modelo: {categoria.value}, "
+            f"uso em horário de pico: {'Sim' if req.uso_horario_pico else 'Nao'}, "
+            f"horas de alto consumo: {req.horas_alto_consumo}h por dia."
+        )
+
+        response = await self._client.chat.completions.create(
+            model=self._modelo,
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": user_prompt},
+            ],
+            temperature=0.3,
+            max_tokens=300,
+        )
+
+        content = response.choices[0].message.content or ""
+        linhas = [
+            linha.strip() for linha in content.split("\n")
+            if linha.strip() and not linha.strip().startswith(("-", "1", "2", "3"))
+        ]
+        return linhas[:3] if len(linhas) >= 3 else linhas + self._recomendacoes_padrao(categoria)[: 3 - len(linhas)]
 
     @staticmethod
-    def _recomendacoes_padrao(
-        req: ClassificarRequest,
-        categoria: ClassificacaoEficiencia,
-    ) -> List[str]:
+    def _recomendacoes_padrao(categoria: ClassificacaoEficiencia) -> List[str]:
         base = [
             "Reduzir o uso de equipamentos durante horários de pico",
             "Avaliar aparelhos com alto consumo energético",

@@ -50,8 +50,9 @@ services:
       dockerfile: Dockerfile
     container_name: gambia-ml
     environment:
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      GROQ_MODEL_ID: ${GROQ_MODEL_ID:-llama-3.3-70b-versatile}
       ML_MODEL_PATH: ${ML_MODEL_PATH:-models/classifier.onnx}
-      FALLBACK_LLM_API_KEY: ${FALLBACK_LLM_API_KEY:-}
       ENERGY_TARIFF_REFERENCE: ${ENERGY_TARIFF_REFERENCE:-0.75}
       OTEL_SERVICE_NAME: gambia-ml
       OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://otel-collector:4318}

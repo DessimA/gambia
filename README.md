@@ -9,7 +9,7 @@ Este documento é o guia oficial de especificação e desenvolvimento do projeto
 ## 📋 Sumário Geral do Guia
 * **Parte 1**: Introdução, Contexto de Negócio e Autoria do Projeto
 * **Parte 2**: Arquitetura do Sistema e Fluxo de Dados (Java, Python, OCI/AWS)
-* **Parte 3**: Especificação Científica, Modelagem de ML e Motor de IA (Qwen 2.5)
+* **Parte 3**: Especificação Científica, Modelagem de ML e Motor de IA (Groq)
 * **Parte 4**: Especificação Prática da API REST e Persistência (Contrato Edital)
 * **Parte 5**: Manual de Configuração de Ambiente (`.env`) e Execução Local/Docker
 
@@ -62,7 +62,7 @@ flowchart TD
 
     subgraph IA [Camada de Inteligência e Inferência]
         C[ML API - FastAPI / Python 3.11]
-        D[(Modelo Classificador + LLM Qwen)]
+        D[(Modelo Classificador + LLM Groq)]
     end
 
     subgraph Persistencia [Camada de Dados]
@@ -98,14 +98,14 @@ backend/src/main/java/com/dessima/gambia/
 
 ### 2.3. Lógica Stateless no Serviço de ML (Python)
 Para suportar com eficiência as requisições de Inteligência Artificial sem gargalos de memória na nuvem, a API Python adota um ciclo de vida estritamente **stateless**:
-* **Carregamento Único (Lifespan)**: Ao iniciar a aplicação FastAPI, a rotina de startup carrega o classificador serializado (`.onnx` ou `.pkl`) e a pipeline do modelo de linguagem (Qwen 2.5) uma única vez.
+* **Carregamento Único (Lifespan)**: Ao iniciar a aplicação FastAPI, a rotina de startup carrega o classificador serializado (`.onnx` ou `.pkl`) uma única vez. A integração com o LLM é feita via API Groq (stateless).
 * **Consumo Eficiente**: As requisições subsequentes apenas executam as inferências nos modelos que já residem na memória RAM do servidor, eliminando o atraso de carregar arquivos pesados de disco a cada chamada HTTP.
 
 ### 2.4. Fluxo de Dados de uma Requisição
 1. **Entrada**: O usuário interage com o Frontend e envia os dados de consumo em formato JSON.
 2. **Segurança (CSRF & JWT)**: O Frontend valida e anexa o token de segurança CSRF (recebido via cookie) no cabeçalho `X-XSRF-TOKEN` da chamada HTTP. O cookie contendo o token JWT (`httpOnly`, `Secure`, `SameSite=Strict`) é trafegado de forma segura e transparente.
 3. **Orquestração**: O controlador do Spring Boot recebe a requisição, executa o Bean Validation, salva as informações de auditoria no PostgreSQL e delega a classificação de dados para a porta externa de dados (`MLClientPort`).
-4. **Inferência de ML**: O Back-End efetua uma requisição interna (via rede privada OCI/AWS) para a API Python, que classifica o consumo e gera as três sugestões dinâmicas usando o modelo Qwen 2.5 local.
+4. **Inferência de ML**: O Back-End efetua uma requisição interna (via rede privada OCI/AWS) para a API Python, que classifica o consumo e gera as três sugestões dinâmicas usando a API Groq (LLM).
 5. **Retorno**: A resposta é tratada, formatada, calcula-se a pegada de CO₂ e a estimativa financeira no Back-End, e as informações são persistidas no banco PostgreSQL antes de serem retornadas estruturadas ao cliente.
 
 ### 2.5. Rastreabilidade e Observabilidade Distribuída
@@ -156,7 +156,7 @@ Em vez de usar uma lista de textos estáticos no banco de dados, o **GambIA** ut
                   |
                   v
 +-----------------------------------+
-|  Modelo Qwen 2.5 1.5B (Local)     |  <-- Roda na VM de dados (4GB RAM)
+|  API Groq (LLM)     |  <-- llama-3.3-70b-versatile via cloud
 +-----------------------------------+
                   |
                   v
@@ -166,8 +166,9 @@ Em vez de usar uma lista de textos estáticos no banco de dados, o **GambIA** ut
 ```
 
 #### A. Arquitetura do Modelo de Linguagem
-* **Modelo**: `Qwen/Qwen2.5-1.5B-Instruct` da Alibaba.
-* **Justificativa**: É um LLM altamente otimizado para instruções (*Instruct*), possuindo excelente compreensão do idioma português. Com apenas 1.5 bilhão de parâmetros, o modelo consome cerca de 3 GB de memória RAM em FP16 (ou menos de 1.5 GB se quantizado para INT4), tornando possível a sua execução local e gratuita na máquina virtual da nuvem (4 GB de RAM) auxiliada por partição de SWAP.
+* **Provedor**: [Groq](https://groq.com) — API de inferência ultrarrápida via LPU.
+* **Modelo**: `llama-3.3-70b-versatile` (configurável via variável `GROQ_MODEL_ID`).
+* **Justificativa**: A API Groq elimina a necessidade de executar LLMs localmente, reduzindo drasticamente os requisitos de hardware (sem GPU, sem RAM extra). O modelo Llama 3.3 70B oferece excelente compreensão do português e geração de recomendações com alta qualidade.
 
 #### B. Estrutura do Prompt e Engenharia de Instrução
 A API Python monta um prompt estruturado contendo as características da residência e o resultado do classificador. A instrução força o modelo a responder estritamente no formato de lista:

@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.classificador import ClassificadorEnergia
-from app.core.llm_gerador import RecomendadorLLM
+from app.core.llm_gerador import RecomendadorGroq
 from app.api.classificar import router as classificar_router
 
 logging.basicConfig(level=logging.INFO)
@@ -18,9 +18,8 @@ async def lifespan(app: FastAPI):
     classificador = ClassificadorEnergia()
     app.state.classificador = classificador
 
-    logger.info("Inicializando LLM...")
-    llm = RecomendadorLLM()
-    await llm.carregar()
+    logger.info("Inicializando Groq LLM...")
+    llm = RecomendadorGroq()
     app.state.llm = llm
 
     logger.info("ML Service ready")

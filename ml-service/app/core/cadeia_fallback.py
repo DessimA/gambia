@@ -3,7 +3,7 @@ from typing import List
 
 from app.models.schemas import ClassificarRequest, ClassificacaoEficiencia, ClassificarResponse
 from app.core.classificador import ClassificadorEnergia
-from app.core.llm_gerador import RecomendadorLLM
+from app.core.llm_gerador import RecomendadorGroq
 from app.core.heuristica import classificar_heuristico
 
 logger = logging.getLogger(__name__)
@@ -14,7 +14,7 @@ LIMIAR_CONFIANCA = 0.80
 async def executar_cadeia(
     req: ClassificarRequest,
     classificador: ClassificadorEnergia,
-    llm: RecomendadorLLM,
+    llm: RecomendadorGroq,
 ) -> ClassificarResponse:
     categoria: ClassificacaoEficiencia
     probabilidade: float = 0.0
