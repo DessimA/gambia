@@ -1,4 +1,4 @@
-from app.models.schemas import ClassificarRequest, ClassificacaoEficiencia
+from app.models.schemas import ClassificacaoEficiencia, ClassificarRequest
 
 
 def classificar_heuristico(req: ClassificarRequest) -> ClassificacaoEficiencia:
