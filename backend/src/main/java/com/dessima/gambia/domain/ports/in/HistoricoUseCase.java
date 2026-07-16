@@ -7,5 +7,6 @@ import java.util.UUID;
 
 public interface HistoricoUseCase {
   List<AnaliseHistorico> listarAnalises(UUID usuarioId);
+
   Optional<AnaliseHistorico> buscarAnalise(UUID analiseId);
 }
