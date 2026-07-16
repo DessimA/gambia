@@ -113,6 +113,15 @@ flowchart TD
     B1 --> B1
 ```
 
+## Endpoints da API
+
+| Método | Rota | Autenticação | Descrição |
+|--------|------|-------------|-----------|
+| POST | `/analise-energetica` | Opcional (JWT) | Análise de consumo energético |
+| POST | `/auth/cadastrar` | Não | Cadastro de novo usuário |
+| POST | `/auth/login` | Não | Login com credenciais |
+| GET | `/actuator/health` | Opcional | Health check |
+
 ## Portas e URLs de Acesso
 
 | Serviço | URL Local | Container |

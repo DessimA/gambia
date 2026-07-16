@@ -11,8 +11,17 @@
 
 ```mermaid
 erDiagram
+    tb_usuario {
+        uuid id PK
+        varchar nome "NOT NULL"
+        varchar email "NOT NULL, UNIQUE"
+        varchar senha_hash "NOT NULL"
+        timestamptz created_at "DEFAULT CURRENT_TIMESTAMP"
+    }
+
     tb_imovel {
         uuid id PK
+        uuid usuario_id FK "OPCIONAL"
         varchar tipo_imovel "NOT NULL"
         int quantidade_equipamentos "NOT NULL, DEFAULT 0"
         timestamptz created_at "DEFAULT CURRENT_TIMESTAMP"
@@ -38,6 +47,7 @@ erDiagram
         timestamptz created_at "DEFAULT CURRENT_TIMESTAMP"
     }
 
+    tb_usuario ||--o{ tb_imovel : "1:N"
     tb_imovel ||--o{ tb_analise_consumo : "1:N"
     tb_analise_consumo ||--o{ tb_recomendacao_gerada : "1:N"
 ```
@@ -58,10 +68,10 @@ CREATE TABLE tb_analise_consumo (
     consumo_kwh NUMERIC(10, 2) NOT NULL,
     uso_horario_pico BOOLEAN NOT NULL,
     horas_alto_consumo INT NOT NULL,
-    categoria VARCHAR(30) NOT NULL,           -- Eficiente, Moderado, Ineficiente
+    categoria VARCHAR(30) NOT NULL,
     probabilidade NUMERIC(5, 4) NOT NULL,
     custo_estimado_mensal NUMERIC(10, 2) NOT NULL,
-    emissao_co2_kg NUMERIC(10, 3) NOT NULL,    -- Fator de emissao SIN
+    emissao_co2_kg NUMERIC(10, 3) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -77,7 +87,36 @@ CREATE TABLE tb_recomendacao_gerada (
 CREATE INDEX idx_recom_analise ON tb_recomendacao_gerada(analise_id);
 ```
 
+## Migração V002 (Flyway)
+
+Adiciona a tabela de usuários e vincula imóveis opcionalmente.
+
+```sql
+CREATE TABLE tb_usuario (
+    id UUID PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    senha_hash VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+ALTER TABLE tb_imovel ADD COLUMN usuario_id UUID REFERENCES tb_usuario(id);
+CREATE INDEX idx_imovel_usuario ON tb_imovel(usuario_id);
+```
+
 ## Descrição das Tabelas
+
+### tb_usuario
+
+Registro dos usuários do sistema.
+
+| Coluna | Tipo | Descrição |
+|--------|------|-----------|
+| id | UUID | Chave primária |
+| nome | VARCHAR(100) | Nome completo do usuário |
+| email | VARCHAR(255) | Email único de login |
+| senha_hash | VARCHAR(255) | Hash BCrypt da senha |
+| created_at | TIMESTAMPTZ | Data de criação |
 
 ### tb_imovel
 
@@ -86,9 +125,12 @@ Cadastro básico do imóvel analisado.
 | Coluna | Tipo | Descrição |
 |--------|------|-----------|
 | id | UUID | Chave primária |
+| usuario_id | UUID | FK para tb_usuario (opcional, permite análises anônimas) |
 | tipo_imovel | VARCHAR(50) | Casa, Apartamento, Comércio, Indústria, Rural, Outro |
 | quantidade_equipamentos | INT | Quantidade de aparelhos elétricos |
 | created_at | TIMESTAMPTZ | Data de criação |
+
+Índice: `idx_imovel_usuario` em `usuario_id`.
 
 ### tb_analise_consumo
 

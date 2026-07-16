@@ -28,14 +28,14 @@
 | [SECURITY.md](../SECURITY.md) | Política de segurança |
 | [LICENSE](../LICENSE) | Licença MIT |
 
-## Proposito
+## Propósito
 
 GambIA é um sistema de análise de eficiência energética que cruza dados de
 consumo residencial/comercial com um classificador inteligente (Random Forest)
 e um modelo de linguagem (Groq LLM), fornecendo diagnóstico, recomendações
 personalizadas e estimativa financeira.
 
-## Repositorio
+## Repositório
 
 ```text
 https://github.com/DessimA/gambia
@@ -50,7 +50,7 @@ https://github.com/DessimA/gambia
 | Frontend | React 18, TypeScript, Vite, lucide-react |
 | Database | PostgreSQL 16, Flyway migrations |
 | Infra | Docker Compose, OpenTelemetry, Prometheus, Grafana |
-| CI | GitHub Actions (Spotless, Ruff, tsc) |
+| CI | GitHub Actions (Spotless, Ruff, tsc, pytest, mvn verify) |
 
 ## Convenções
 

@@ -84,19 +84,45 @@
 - [x] Frontend: tsc --noEmit
 - [x] PR #1 dev -> main (merged)
 
-## Fase 2 - Autenticação e Usuários
+## Fase 2 - Autenticação e Usuários (Completa)
 
-### Pendente
+### Backend
 
-- [ ] Modelo de usuário (tb_usuario)
-- [ ] Cadastro de usuário (POST /auth/cadastrar)
-- [ ] Login com credenciais (POST /auth/login)
-- [ ] Hash de senha (BCrypt)
-- [ ] Sessão persistente com JWT
-- [ ] Vincular imóveis a usuários autenticados
-- [ ] Formulários de login/cadastro funcionais no frontend
-- [ ] Rotas protegidas no frontend (PrivateRoute)
-- [ ] Refresh token
+- [x] Modelo de usuário (tb_usuario)
+- [x] Cadastro de usuário (POST /auth/cadastrar)
+- [x] Login com credenciais (POST /auth/login)
+- [x] Hash de senha (BCrypt)
+- [x] Sessão persistente com JWT (cookie httpOnly)
+- [x] Vincular imóveis a usuários autenticados (usuario_id opcional)
+- [x] Retorno de dados do usuário no login (id, nome, email)
+
+### Frontend
+
+- [x] Formulário de login funcional
+- [x] Formulário de cadastro funcional
+- [x] AuthContext com persistência em localStorage
+- [x] Restauração de sessão ao recarregar
+- [x] Navbar com nome real do usuário
+- [x] Links condicionais (Login/Cadastrar apenas quando deslogado)
+- [x] ScrollToTop button
+- [x] PrivateRoute para rotas protegidas
+- [x] Login retorna id, nome, email (não mais vazio)
+
+### Testes
+
+- [x] Testes unitários backend (JUnit 5, Mockito, MockMvc, DataJpaTest) — 31 testes
+- [x] Testes ML service (pytest, pytest-asyncio) — 35 testes
+- [x] H2 para testes de persistência
+- [x] application-test.yml com Flyway desabilitado
+- [x] Dockerfile backend executa `mvn verify` (Spotless + testes)
+- [x] Dockerfile ML service executa `pytest` em multi-stage builder
+
+### Infraestrutura
+
+- [x] Builds executam testes automaticamente via Docker
+- [x] .gitignore backend/bin/
+- [x] docker-compose.yml sem version (obsoleto)
+- [x] PR #4 dev -> main (merged)
 
 ## Fase 3 - Histórico e Dashboard
 
