@@ -6,7 +6,9 @@ import com.dessima.gambia.domain.model.SolicitacaoAnalise;
 import com.dessima.gambia.domain.ports.in.ObterAnaliseUseCase;
 import jakarta.validation.Valid;
 import java.util.Optional;
+import java.util.UUID;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,7 +25,18 @@ public class AnaliseController {
   }
 
   @PostMapping
-  public ResponseEntity<AnaliseResponse> analisar(@Valid @RequestBody AnaliseRequest request) {
+  public ResponseEntity<AnaliseResponse> analisar(
+      @Valid @RequestBody AnaliseRequest request, Authentication authentication) {
+    Optional<UUID> usuarioId = Optional.empty();
+    if (authentication != null
+        && authentication.isAuthenticated()
+        && !"dev-user".equals(authentication.getName())) {
+      try {
+        usuarioId = Optional.of(UUID.fromString(authentication.getName()));
+      } catch (IllegalArgumentException e) {
+      }
+    }
+
     var solicitacao =
         new SolicitacaoAnalise(
             Optional.ofNullable(request.imovel_id()),
@@ -31,7 +44,8 @@ public class AnaliseController {
             request.uso_horario_pico(),
             request.quantidade_equipamentos(),
             request.tipo_imovel(),
-            request.horas_alto_consumo());
+            request.horas_alto_consumo(),
+            usuarioId);
 
     var resultado = useCase.executar(solicitacao);
     return ResponseEntity.ok(AnaliseResponse.fromDomain(resultado));

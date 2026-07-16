@@ -1,3 +1,9 @@
+export interface Usuario {
+  id: string
+  nome: string
+  email: string
+}
+
 export interface AnaliseRequest {
   imovel_id?: string
   consumo_kwh: number

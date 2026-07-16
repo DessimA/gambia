@@ -1,19 +1,22 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Menu, Sun, Moon } from 'lucide-react'
+import { Menu, Sun, Moon, LogOut } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext'
+import { useAuth } from '../context/AuthContext'
 import Logo from './Logo'
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
   const { theme, toggle } = useTheme()
   const location = useLocation()
+  const { usuario, logout } = useAuth()
 
-  const links = [
-    { to: '/', label: 'Início' },
-    { to: '/login', label: 'Login' },
-    { to: '/cadastrar', label: 'Cadastrar' },
-  ]
+  const links = usuario
+    ? []
+    : [
+        { to: '/login', label: 'Login' },
+        { to: '/cadastrar', label: 'Cadastrar' },
+      ]
 
   return (
     <nav className="navbar">
@@ -24,6 +27,16 @@ export default function Navbar() {
         </Link>
 
         <div className="navbar-right">
+          {usuario && (
+            <span className="navbar-user" style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginRight: '0.5rem' }}>
+              {usuario.nome}
+            </span>
+          )}
+          {usuario && (
+            <button className="theme-toggle" onClick={logout} aria-label="Sair" title="Sair">
+              <LogOut size={18} />
+            </button>
+          )}
           <button
             className="theme-toggle"
             onClick={toggle}
