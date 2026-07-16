@@ -55,6 +55,34 @@ flowchart TD
 | `promdata` | `/prometheus` | prometheus |
 | `grafanadata` | `/var/lib/grafana` | grafana |
 
+## Dockerfiles
+
+### Backend (multi-stage)
+
+- **Build**: `maven:3.9.8-eclipse-temurin-21-alpine`
+  - Executa `mvn verify -B` (Spotless + compile + testes)
+  - Gera JAR com dependências
+- **Runtime**: `eclipse-temurin:21-jre-alpine`
+  - Copia JAR do stage anterior
+  - Porta 8080
+
+### ML Service (multi-stage)
+
+- **Builder**: `python:3.11-slim`
+  - Instala dependências: `pip install .[dev]`
+  - Executa `pytest`
+- **Runtime**: `python:3.11-slim`
+  - Copia apenas código e dependências de produção
+  - Porta 8000, `uvicorn` como entrypoint
+
+### Frontend (multi-stage)
+
+- **Build**: `node:20-alpine`
+  - Executa `npm ci && npm run build`
+- **Runtime**: `nginx:alpine`
+  - Copia build estático para `/usr/share/nginx/html`
+  - Porta 80 (mapeada como 5173)
+
 ## Variáveis de Ambiente
 
 Gerenciadas via `.env` na raiz do projeto (copiado de `.env.example`).
@@ -66,13 +94,15 @@ Gerenciadas via `.env` na raiz do projeto (copiado de `.env.example`).
 | `DB_NAME` | gambia | backend | Nome do banco |
 | `DB_USER` | postgres | backend | Usuário do banco |
 | `DB_PASSWORD` | - | backend | Senha do banco |
-| `JWT_SECRET_KEY` | - | backend | Chave de assinatura JWT |
+| `JWT_SECRET_KEY` | - | backend | Chave de assinatura JWT (mín. 32 chars) |
 | `JWT_EXPIRATION_MS` | 86400000 | backend | Expiração do token (24h) |
 | `ML_SERVICE_URL` | http://ml-service:8000 | backend | URL do ML Service interno |
+| `ML_MODEL_PATH` | models/classifier.onnx | ml-service | Caminho do modelo serializado |
 | `VITE_API_URL` | http://localhost:8080 | frontend | URL do backend para o navegador |
 | `GROQ_API_KEY` | (vazio) | ml-service | Chave da API Groq |
 | `GROQ_MODEL_ID` | llama-3.3-70b-versatile | ml-service | Modelo LLM |
 | `ENERGY_TARIFF_REFERENCE` | 0.75 | ml-service | Tarifa de referência |
+| `OTEL_SERVICE_NAME` | gambia-backend | backend, ml | Nome do serviço no OpenTelemetry |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | http://otel-collector:4318 | backend, ml | Endpoint OTLP |
 
 ## Observabilidade
@@ -114,8 +144,8 @@ Workflow: `.github/workflows/lint.yml`
 
 ```yaml
 jobs:
-  backend:     # Maven spotless:check + compile (JDK 21)
-  ml-service:  # Ruff check app/ (Python 3.11)
+  backend:     # Maven spotless:check + compile + test (JDK 21)
+  ml-service:  # Ruff check app/ + pytest (Python 3.11)
   frontend:    # tsc --noEmit (Node 20)
 ```
 
@@ -123,6 +153,7 @@ jobs:
 
 | Commit | Status | Observação |
 |--------|--------|------------|
+| `9ca42f6` | Pendente | Fase 2: autenticação, testes, scroll-to-top |
 | `3b58e60` | Passou | Último commit aprovado no lint |
 | `8dbcd31` | Falhou | Ruff I001 em heuristica.py (corrigido) |
 | `d7e9309` | Falhou | Ruff N806 em classificador.py (corrigido) |

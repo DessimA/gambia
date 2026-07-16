@@ -108,6 +108,11 @@ Para suportar com eficiência as requisições de Inteligência Artificial sem g
 4. **Inferência de ML**: O Back-End efetua uma requisição interna (via rede privada OCI/AWS) para a API Python, que classifica o consumo e gera as três sugestões dinâmicas usando a API Groq (LLM).
 5. **Retorno**: A resposta é tratada, formatada, calcula-se a pegada de CO₂ e a estimativa financeira no Back-End, e as informações são persistidas no banco PostgreSQL antes de serem retornadas estruturadas ao cliente.
 
+#### Fluxo de Autenticação
+1. **Cadastro**: O usuário envia `{ nome, email, senha }` para `POST /auth/cadastrar`. O backend valida, hasheia a senha com BCrypt, persiste o usuário e retorna cookie `SESSION_TOKEN` + `{ id, nome, email }`.
+2. **Login**: O usuário envia `{ email, senha }` para `POST /auth/login`. O backend verifica as credenciais e retorna cookie `SESSION_TOKEN` + `{ id, nome, email }`.
+3. **Sessão**: O frontend armazena `{ id, nome, email }` no `localStorage` e restaura a sessão ao recarregar se o cookie `SESSION_TOKEN` ainda for válido.
+
 ### 2.5. Rastreabilidade e Observabilidade Distribuída
 Para permitir a depuração ágil em ambiente de portfólio de nuvem, todas as requisições utilizam cabeçalhos de contexto de rastreabilidade (**OpenTelemetry**):
 * O Back-End gera um `correlation-id` (ou propaga o recebido da borda).
@@ -201,6 +206,35 @@ Esta seção apresenta a especificação técnica dos endpoints, as regras de va
 ### 4.1. Contrato da API REST
 O **GambIA** expõe seus serviços de processamento de forma síncrona através de uma API REST estruturada.
 
+#### Endpoints de Autenticação
+
+##### `POST /auth/cadastrar`
+* **Objetivo**: Registrar um novo usuário no sistema.
+* **Content-Type**: `application/json`
+* **Request**:
+```json
+{
+  "nome": "Maria Silva",
+  "email": "maria@email.com",
+  "senha": "minhaSenha123"
+}
+```
+* **Response 201**: `{ "id": "uuid", "nome": "Maria Silva", "email": "maria@email.com" }` + cookie `SESSION_TOKEN`
+* **Erro 409**: Email já cadastrado.
+
+##### `POST /auth/login`
+* **Objetivo**: Autenticar usuário existente.
+* **Content-Type**: `application/json`
+* **Request**:
+```json
+{
+  "email": "maria@email.com",
+  "senha": "minhaSenha123"
+}
+```
+* **Response 200**: `{ "id": "uuid", "nome": "Maria Silva", "email": "maria@email.com" }` + cookie `SESSION_TOKEN`
+* **Erro 401**: Credenciais inválidas.
+
 #### Endpoint Principal: `POST /analise-energetica`
 * **Objetivo**: Receber os dados operacionais do imóvel, acionar os motores de classificação (Machine Learning) e recomendação (IA Generativa) e retornar o diagnóstico consolidado.
 * **Content-Type**: `application/json`
@@ -265,14 +299,31 @@ O banco de dados relacional armazena de forma estruturada as auditorias de consu
 
 O versionamento é gerenciado através de migrações SQL do **Flyway** estruturadas sob o diretório `backend/src/main/resources/db/migration/`.
 
+#### Tabela 0: `tb_usuario` (Registro de usuários) — Migração V002
+```sql
+CREATE TABLE tb_usuario (
+    id UUID PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    senha_hash VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+ALTER TABLE tb_imovel ADD COLUMN usuario_id UUID REFERENCES tb_usuario(id);
+CREATE INDEX idx_imovel_usuario ON tb_imovel(usuario_id);
+```
+
 #### Tabela 1: `tb_imovel` (Cadastro básico do imóvel)
 ```sql
 CREATE TABLE tb_imovel (
     id UUID PRIMARY KEY,
+    usuario_id UUID REFERENCES tb_usuario(id),  -- Opcional (análise anônima)
     tipo_imovel VARCHAR(50) NOT NULL,
     quantidade_equipamentos INT NOT NULL DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE INDEX idx_imovel_usuario ON tb_imovel(usuario_id);
 ```
 
 #### Tabela 2: `tb_analise_consumo` (Histórico de leituras e estimativas)
@@ -333,7 +384,7 @@ O arquivo de exemplo abaixo orienta quais são os dados necessários para o boot
 # ==============================================================================
 
 # --- AMBIENTE GERAL ---
-NODE_ENV=development # development, production
+NODE_ENV=development
 
 # --- BANCO DE DADOS (POSTGRESQL EM CONTAINER) ---
 DB_HOST=postgres-db
@@ -343,23 +394,22 @@ DB_USER=postgres
 DB_PASSWORD=postgres_password_alterar_aqui
 
 # --- CONFIGURAÇÕES DE SEGURANÇA (JAVA BACKEND) ---
-# Chave de assinatura HS256 do JWT (mínimo de 256 bits/32 caracteres para segurança)
 JWT_SECRET_KEY=sua_chave_secreta_super_segura_de_32_caracteres_minimo
-# Tempo de expiração do token de sessão (em milissegundos)
 JWT_EXPIRATION_MS=86400000
 
-# --- INTEGRAÇÃO COM SERVIÇOS (DIRETÓRIOS E URLs INTERNAS DO DOCKER) ---
-# O backend se comunica com a API de IA através da rede interna do Docker Compose
+# --- INTEGRAÇÃO COM SERVIÇOS ---
 ML_SERVICE_URL=http://ml-service:8000
-
-# O frontend no navegador consome a API Java exposta na porta mapeada local
+ML_MODEL_PATH=models/classifier.onnx
 VITE_API_URL=http://localhost:8080
 
 # --- CONFIGURAÇÕES DE IA (PYTHON SERVICE) ---
-# Diretório do modelo dentro do container Python
-ML_MODEL_PATH=models/classifier.onnx
-FALLBACK_LLM_API_KEY=seu_token_opcional_para_llm_externo
+GROQ_API_KEY=
+GROQ_MODEL_ID=llama-3.3-70b-versatile
 ENERGY_TARIFF_REFERENCE=0.75
+
+# --- OBSERVABILIDADE ---
+OTEL_SERVICE_NAME=gambia-backend
+OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
 ```
 
 ---
@@ -419,6 +469,23 @@ curl -X POST http://localhost:8080/analise-energetica \
        "tipo_imovel": "Casa",
        "horas_alto_consumo": 8
      }'
+```
+
+### 5.5. Testes Automatizados
+
+Os builds do Docker já executam testes automaticamente:
+
+- **Backend** (`mvn verify -B`): Spotless (formatação) + compilação + 31 testes JUnit 5
+- **ML Service** (`pytest`): 35 testes com `pytest-asyncio`
+
+Para executar testes manualmente fora do Docker:
+
+```bash
+# Backend (requer Java 21 + Maven)
+cd backend && mvn test
+
+# ML Service (requer Python 3.11)
+cd ml-service && pip install .[dev] && pytest
 ```
 
 ---

@@ -13,14 +13,18 @@ backend/src/main/java/com/dessima/gambia/
 |   |   +-- ResultadoAnalise.java    # Record: resultado consolidado
 |   |   +-- ClassificacaoEficiencia.java  # Enum: Eficiente, Moderado, Ineficiente
 |   |   +-- TipoImovel.java          # Enum: Casa, Apartamento, Comércio, ...
+|   |   +-- Usuario.java             # Record: id, nome, email, senhaHash
 |   +-- ports/
 |   |   +-- in/
-|   |   |   +-- ObterAnaliseUseCase.java  # Interface do caso de uso
+|   |   |   +-- ObterAnaliseUseCase.java      # Interface do caso de uso
+|   |   |   +-- AutenticacaoUseCase.java      # Cadastro/login
 |   |   +-- out/
-|   |       +-- MLClientPort.java         # SPI para chamada ao ML
-|   |       +-- PersistenciaPort.java     # SPI para persistência
+|   |       +-- MLClientPort.java             # SPI para chamada ao ML
+|   |       +-- PersistenciaPort.java         # SPI para persistência
+|   |       +-- UsuarioRepositoryPort.java    # SPI para usuários
 |   +-- service/
-|       +-- AnaliseEnergiaService.java    # Implementação do caso de uso
+|       +-- AnaliseEnergiaService.java        # Implementação do caso de uso
+|       +-- AutenticacaoService.java          # Cadastro/login com BCrypt
 |
 +-- adapters/
     +-- config/
@@ -30,6 +34,9 @@ backend/src/main/java/com/dessima/gambia/
     |   |   +-- AnaliseRequest.java       # Record com Bean Validation
     |   |   +-- AnaliseResponse.java      # Record de resposta
     |   |   +-- ErroResponse.java         # Record de erro padrão
+    |   |   +-- CadastroRequest.java      # nome, email, senha
+    |   |   +-- LoginRequest.java         # email, senha
+    |   |   +-- LoginResponse.java        # id, nome, email
     |   +-- security/
     |   |   +-- CorsConfig.java           # CORS para localhost:5173
     |   |   +-- SecurityConfig.java       # Spring Security + CSRF
@@ -37,7 +44,7 @@ backend/src/main/java/com/dessima/gambia/
     |   |   +-- JwtAuthenticationFilter.java  # Filtro de autenticação
     |   +-- web/
     |       +-- AnaliseController.java    # POST /analise-energetica
-    |       +-- AuthController.java       # GET /login (dev JWT)
+    |       +-- AuthController.java       # POST /auth/cadastrar, POST /auth/login
     |       +-- GlobalExceptionHandler.java   # Tratamento de erros
     +-- out/                        # Adaptadores de Saída
         +-- client/
@@ -47,16 +54,22 @@ backend/src/main/java/com/dessima/gambia/
             +-- ImovelEntity.java          # JPA Entity: tb_imovel
             +-- AnaliseConsumoEntity.java  # JPA Entity: tb_analise_consumo
             +-- RecomendacaoGeradaEntity.java  # JPA Entity: tb_recomendacao_gerada
+            +-- UsuarioEntity.java         # JPA Entity: tb_usuario
             +-- ImovelRepository.java      # JPA Repository
             +-- AnaliseConsumoRepository.java  # JPA Repository
             +-- RecomendacaoGeradaRepository.java  # JPA Repository
+            +-- UsuarioRepository.java     # JPA Repository (findByEmail)
             +-- PersistenciaJpaAdapter.java    # Implementação da PersistênciaPort
+            +-- UsuarioJpaAdapter.java     # Implementação do UsuarioRepositoryPort
 ```
 
-## Endpoint: POST /analise-energetica
+## Endpoints
 
-### Request Body
+### POST /analise-energetica
 
+Público (sem autenticação necessária). Aceita `imovel_id` opcional para associar a um imóvel existente.
+
+**Request Body**
 ```json
 {
   "imovel_id": "uuid-opcional",
@@ -68,7 +81,7 @@ backend/src/main/java/com/dessima/gambia/
 }
 ```
 
-### Regras de Validação (Bean Validation)
+**Regras de Validação (Bean Validation)**
 
 | Campo | Regras |
 |-------|--------|
@@ -78,8 +91,7 @@ backend/src/main/java/com/dessima/gambia/
 | `tipo_imovel` | @NotBlank |
 | `horas_alto_consumo` | @NotNull, @Min(0), @Max(24) |
 
-### Response (200 OK)
-
+**Response (200 OK)**
 ```json
 {
   "categoria": "Ineficiente",
@@ -93,19 +105,67 @@ backend/src/main/java/com/dessima/gambia/
 }
 ```
 
-### Response (400 Bad Request)
-
+**Response (400 Bad Request)**
 ```json
 {
   "timestamp": "2026-07-15T14:24:00Z",
   "status": 400,
   "erro": "Bad Request",
-  "mensagem": "Falha na validacao dos campos de entrada",
+  "mensagem": "Falha na validação dos campos de entrada",
   "campos": {
-    "horas_alto_consumo": "O valor de horas diarias de alto consumo deve estar entre 0 e 24"
+    "horas_alto_consumo": "O valor de horas diárias de alto consumo deve estar entre 0 e 24"
   }
 }
 ```
+
+### POST /auth/cadastrar
+
+Cria um novo usuário. Retorna cookie `SESSION_TOKEN` e dados do usuário.
+
+**Request Body**
+```json
+{
+  "nome": "Maria Silva",
+  "email": "maria@email.com",
+  "senha": "minhaSenha123"
+}
+```
+
+**Validações**: nome (obrigatório), email (formato válido), senha (mínimo 6 caracteres).
+
+**Response (201 Created)**
+```json
+{
+  "id": "uuid",
+  "nome": "Maria Silva",
+  "email": "maria@email.com"
+}
+```
+
+Erro: `409 Conflict` se email já cadastrado.
+
+### POST /auth/login
+
+Autentica usuário existente. Retorna cookie `SESSION_TOKEN` e dados do usuário.
+
+**Request Body**
+```json
+{
+  "email": "maria@email.com",
+  "senha": "minhaSenha123"
+}
+```
+
+**Response (200 OK)**
+```json
+{
+  "id": "uuid",
+  "nome": "Maria Silva",
+  "email": "maria@email.com"
+}
+```
+
+Erro: `401 Unauthorized` se credenciais inválidas.
 
 ## Serviço de Domínio: AnaliseEnergiaService
 
@@ -121,15 +181,41 @@ Fluxo de execução:
     - Salva recomendações em `tb_recomendacao_gerada`
 6. Retorna `ResultadoAnalise` completo
 
+## Serviço de Domínio: AutenticacaoService
+
+Fluxo de cadastro:
+1. Valida senha (mínimo 6 caracteres)
+2. Verifica se email já existe (lança exceção se duplicado)
+3. Hash da senha com BCrypt
+4. Persiste `Usuario` via `UsuarioRepositoryPort`
+5. Gera JWT e retorna dados do usuário
+
+Fluxo de login:
+1. Busca usuário por email
+2. Verifica senha com BCrypt
+3. Gera JWT e retorna dados do usuário
+
 ## Tratamento de Erros
 
 `GlobalExceptionHandler` (RestControllerAdvice) captura:
 
 - `MethodArgumentNotValidException` -> 400 com mapa de campos
 - `IllegalArgumentException` -> 400 (ex: tipo_imovel inválido)
+- `EmailDuplicadoException` -> 409 Conflict
+- `CredenciaisInvalidasException` -> 401 Unauthorized
 - `Exception` -> 500 genérico
 
-## Endpoint: GET /login
+## Testes (JUnit 5 + Mockito + MockMvc + DataJpaTest)
 
-Endpoint temporário de dev que gera um JWT e o define como cookie
-`SESSION_TOKEN` (httpOnly). Sem autenticação real neste protótipo.
+66 testes automatizados divididos em:
+
+| Classe | Qtde | Escopo |
+|--------|------|--------|
+| `AnaliseEnergiaServiceTest` | 6 | Cálculo custo/CO2, execução completa |
+| `AutenticacaoServiceTest` | 5 | Cadastro/login, duplicidade, senha inválida |
+| `JwtTokenProviderTest` | 6 | Geração, validação, extração subject |
+| `AnaliseControllerTest` | 5 | POST /analise-energetica, validações |
+| `AuthControllerTest` | 5 | POST /auth/cadastrar, POST /auth/login |
+| `UsuarioRepositoryTest` | 4 | Save, findByEmail, unicidade |
+
+Configuração de teste em `src/test/resources/application-test.yml` com H2 em modo PostgreSQL. Flyway desabilitado em testes (JPA `ddl-auto: create-drop`).

@@ -5,36 +5,39 @@
 ```
 frontend/src/
 +-- main.tsx                     # Entry point: BrowserRouter + ThemeProvider
-+-- App.tsx                      # Rotas: /, /login, /cadastrar
-+-- App.css                      # Tema Energia Verde (CSS custom properties)
++-- App.tsx                      # Rotas: /, /login, /cadastrar + ScrollToTop
++-- App.css                      # Tema Energia Verde + ScrollToTop styles
 +-- vite-env.d.ts
 +-- context/
 |   +-- ThemeContext.tsx          # Tema claro/escuro com localStorage
+|   +-- AuthContext.tsx           # Contexto de autenticação (login, cadastro, logout)
 +-- types/
 |   +-- index.ts                 # Interfaces TypeScript
 +-- services/
 |   +-- demo.ts                  # Chamada pública (sem auth)
-|   +-- api.ts                   # Chamada autenticada (com CSRF + cookies)
+|   +-- api.ts                   # Chamada autenticada (login, cadastro)
 +-- components/
 |   +-- Logo.tsx                 # SVG personalizado (árvore + letra G)
-|   +-- Navbar.tsx               # Navegação com toggle de tema
+|   +-- Navbar.tsx               # Navegação com toggle de tema + dados do usuário
 |   +-- Hero.tsx                 # Seção hero com gradientes animados
 |   +-- DemoTool.tsx             # Formulário de demonstração
 |   +-- FeatureCards.tsx         # Bento grid de funcionalidades
 |   +-- Footer.tsx               # Rodapé
+|   +-- ScrollToTop.tsx          # Botão flutuante de voltar ao topo
+|   +-- PrivateRoute.tsx         # Rota protegida (redireciona se não autenticado)
 +-- pages/
     +-- Home.tsx                 # Landing page completa
-    +-- Login.tsx                # Placeholder "Em Breve"
-    +-- Cadastrar.tsx            # Placeholder "Em Breve"
+    +-- Login.tsx                # Formulário de login funcional
+    +-- Cadastrar.tsx            # Formulário de cadastro funcional
 ```
 
 ## Rotas
 
-| Rota | Página | Descrição |
-|------|--------|-----------|
-| `/` | Home | Landing page com Hero + Demo + Features + Footer |
-| `/login` | Login | Placeholder com "Em Breve" (inputs disabled) |
-| `/cadastrar` | Cadastrar | Placeholder com "Em Breve" (inputs disabled) |
+| Rota | Página | Descrição | Acesso |
+|------|--------|-----------|--------|
+| `/` | Home | Landing page com Hero + Demo + Features + Footer | Público |
+| `/login` | Login | Formulário de login funcional | Público |
+| `/cadastrar` | Cadastrar | Formulário de cadastro funcional | Público |
 
 ## Temas (Claro/Escuro)
 
@@ -94,6 +97,58 @@ Após submit, exibe:
 - Custo estimado em R$
 - Lista de recomendações com borda verde
 
+## Autenticação
+
+### AuthContext
+
+Provedor de contexto que gerencia o estado de autenticação:
+
+- `usuario: Usuario | null` — dados do usuário logado
+- `login(email, senha)` — autentica e armazena dados no `localStorage`
+- `cadastrar(nome, email, senha)` — registra e armazena dados no `localStorage`
+- `logout()` — limpa dados e remove do `localStorage`
+- Ao carregar, restaura sessão do `localStorage` se o cookie `SESSION_TOKEN` existir
+
+### Navbar
+
+- Exibe nome real do usuário quando autenticado
+- Botão "Sair" quando logado
+- Links "Login" e "Cadastrar" visíveis apenas para usuários não autenticados
+- Link "Início" removido (logo/nome já levam à home)
+
+### ScrollToTop
+
+- Botão circular com ícone `ArrowUp`
+- Posicionado no canto inferior direito (`position: fixed`)
+- Aparece com animação após 400px de scroll vertical
+- Smooth scroll ao topo ao clicar
+- Estilos responsivos com variáveis CSS
+
+### PrivateRoute
+
+- Componente que redireciona para `/login` se o usuário não estiver autenticado
+- Renderiza `children` ou `<Outlet />` se autenticado
+
+## Páginas de Autenticação
+
+### Login.tsx
+
+- Formulário com campos: email, senha
+- Validação de campos obrigatórios
+- Chamada `AuthContext.login()` no submit
+- Redireciona para `/` após sucesso
+- Exibe erros da API (ex: credenciais inválidas)
+- Link para página de cadastro
+
+### Cadastrar.tsx
+
+- Formulário com campos: nome, email, senha
+- Validação de campos obrigatórios (senha mín. 6 caracteres)
+- Chamada `AuthContext.cadastrar()` no submit
+- Redireciona para `/` após sucesso
+- Exibe erros da API (ex: email duplicado)
+- Link para página de login
+
 ## Services
 
 ### demo.ts (Público)
@@ -110,12 +165,13 @@ async function analisarDemo(data: AnaliseRequest): Promise<AnaliseResponse>
 
 ```typescript
 async function analisarEnergia(data: AnaliseRequest): Promise<AnaliseResponse>
-async function login(): Promise<void>
+async function login(email: string, senha: string): Promise<LoginResponse>
+async function cadastrar(nome: string, email: string, senha: string): Promise<LoginResponse>
 ```
 
 - Lê cookie `XSRF-TOKEN` e envia como header `X-XSRF-TOKEN`
 - Inclui `credentials: include` para cookies de sessão
-- `login()` faz GET para `/login` para obter cookie JWT
+- `login()` e `cadastrar()` chamam endpoints de auth com JSON
 
 ## Tipos Compartilhados
 
@@ -134,6 +190,12 @@ interface AnaliseResponse {
   probabilidade: number
   recomendacoes: string[]
   custo_estimado_mensal: number
+}
+
+interface Usuario {
+  id: string
+  nome: string
+  email: string
 }
 
 type ClassificacaoEficiencia = 'Eficiente' | 'Moderado' | 'Ineficiente'

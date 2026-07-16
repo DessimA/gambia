@@ -3,24 +3,28 @@
 ## Autenticação (JWT)
 
 O GambIA utiliza JWT (JSON Web Token) armazenado em cookie httpOnly para
-autenticação de usuários.
+autenticação de usuários. O token é gerado no login/cadastro e incluído na
+resposta como cookie `SESSION_TOKEN` (`httpOnly`, `Secure`, `SameSite=Strict`).
 
 ### Fluxo
 
 ```mermaid
 sequenceDiagram
+    participant User as Usuario
     participant FE as Frontend
     participant BE as Backend
 
-    FE->>BE: GET /login
-    BE->>BE: Gera JWT (subject dev-user)
-    BE->>FE: Define cookie SESSION_TOKEN (JWT)
+    User->>FE: Preenche email + senha
+    FE->>BE: POST /auth/login (JSON)
+    BE->>BE: Verifica credenciais
+    BE->>BE: Gera JWT (subject = usuario.id)
+    BE->>FE: 200 OK + Set-Cookie: SESSION_TOKEN
     Note over FE: Cookie enviado automaticamente nas requisicoes seguintes
-    FE->>BE: GET /analise-energetica (com SESSION_TOKEN)
+    FE->>BE: POST /analise-energetica (com SESSION_TOKEN)
     BE->>BE: JwtAuthenticationFilter le o cookie
     BE->>BE: Valida assinatura e expiracao
-    BE->>BE: Seta SecurityContextHolder
-    BE-->>FE: Resposta
+    BE->>BE: Extrai usuarioId do subject
+    BE-->>FE: Resposta com analise vinculada ao usuario
 ```
 
 ### JwtTokenProvider
@@ -28,14 +32,29 @@ sequenceDiagram
 - Algoritmo: HS256 (HMAC-SHA256)
 - Chave: derivada de `JWT_SECRET_KEY` (mínimo 32 caracteres)
 - Expiração: configurada via `JWT_EXPIRATION_MS` (default 24h)
-- Claims: `sub` (subject), `iat`, `exp`
+- Claims: `sub` (ID do usuário como string), `iat`, `exp`
 
 ### JwtAuthenticationFilter
 
 - Estende `OncePerRequestFilter`
 - Lê o cookie `SESSION_TOKEN` de cada requisição
-- Se válido, cria `UsernamePasswordAuthenticationToken` com role `ROLE_USER`
-- Não bloqueia requisições sem token (apenas opcional)
+- Se válido, extrai `usuarioId` do subject e cria `UsernamePasswordAuthenticationToken`
+  com role `ROLE_USER`
+- Se inválido ou ausente, apenas continua a cadeia (não bloqueia)
+
+### Endpoints de Autenticação
+
+#### POST /auth/cadastrar
+
+- **Request**: `{ nome, email, senha }`
+- **Response 201**: `{ id, nome, email }` + cookie `SESSION_TOKEN`
+- **Erros**: 409 se email já cadastrado, 400 se validação falhar
+
+#### POST /auth/login
+
+- **Request**: `{ email, senha }`
+- **Response 200**: `{ id, nome, email }` + cookie `SESSION_TOKEN`
+- **Erros**: 401 se credenciais inválidas
 
 ## CSRF (Double Submit Cookie)
 
@@ -47,7 +66,7 @@ Proteção contra Cross-Site Request Forgery via Double Submit Cookie Pattern.
 http.csrf(csrf ->
     csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
         .csrfTokenRequestHandler(csrfHandler)
-        .ignoringRequestMatchers("/analise-energetica"))
+        .ignoringRequestMatchers("/analise-energetica", "/auth/**"))
 ```
 
 ### Fluxo
@@ -56,11 +75,11 @@ http.csrf(csrf ->
 2. Frontend lê o cookie e envia o valor no header `X-XSRF-TOKEN`
 3. Backend compara os dois valores
 
-### Exceção
+### Exceções
 
-O endpoint `/analise-energetica` é ignorado pelo CSRF (permitAll + sem CSRF)
-para permitir o uso da ferramenta de demo pública sem necessidade de
-autenticação.
+Os endpoints `/analise-energetica` e `/auth/**` são ignorados pelo CSRF
+para permitir o uso da ferramenta de demo pública e o fluxo de
+login/cadastro sem token CSRF.
 
 ## CORS
 
@@ -89,6 +108,7 @@ configurado com `.anyRequest().permitAll()` para fins de protótipo.
 
 | Endpoint | Autenticação | CSRF | Uso |
 |----------|-------------|------|-----|
-| `POST /analise-energetica` | Opcional (JWT) | Ignorado | Demo pública |
-| `GET /login` | Não | Protegido | Dev: obter JWT |
+| `POST /analise-energetica` | Opcional (JWT) | Ignorado | Demo pública + análises autenticadas |
+| `POST /auth/cadastrar` | Não | Ignorado | Cadastro de usuário |
+| `POST /auth/login` | Não | Ignorado | Login de usuário |
 | `GET /actuator/**` | Opcional | Protegido | Health checks |
