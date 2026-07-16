@@ -133,14 +133,8 @@ Cria um novo usuário. Retorna cookie `SESSION_TOKEN` e dados do usuário.
 
 **Validações**: nome (obrigatório), email (formato válido), senha (mínimo 6 caracteres).
 
-**Response (201 Created)**
-```json
-{
-  "id": "uuid",
-  "nome": "Maria Silva",
-  "email": "maria@email.com"
-}
-```
+**Response (201 Created)**: Corpo vazio. O cookie `SESSION_TOKEN` é definido na resposta.
+O frontend chama login em seguida para obter `{ id, nome, email }`.
 
 Erro: `400 Bad Request` se email já cadastrado.
 
