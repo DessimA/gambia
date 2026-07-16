@@ -45,6 +45,7 @@ backend/src/main/java/com/dessima/gambia/
     |   +-- web/
     |       +-- AnaliseController.java    # POST /analise-energetica
     |       +-- AuthController.java       # POST /auth/cadastrar, POST /auth/login
+    |       +-- HistoricoController.java  # GET /analises, GET /analises/{id}, GET /dashboard
     |       +-- GlobalExceptionHandler.java   # Tratamento de erros
     +-- out/                        # Adaptadores de Saída
         +-- client/
@@ -160,6 +161,57 @@ Autentica usuário existente. Retorna cookie `SESSION_TOKEN` e dados do usuário
 ```
 
 Erro: `400 Bad Request` se credenciais inválidas.
+
+### GET /analises
+
+Lista todas as análises do usuário autenticado (extraído do JWT).
+
+**Response (200 OK)**
+```json
+[
+  {
+    "id": "uuid",
+    "categoria": "Ineficiente",
+    "probabilidade": 0.81,
+    "consumoKwh": 420.00,
+    "custoEstimadoMensal": 315.00,
+    "emissaoCo2Kg": 16.17,
+    "usoHorarioPico": true,
+    "horasAltoConsumo": 8,
+    "createdAt": "2026-07-15T14:24:00Z",
+    "recomendacoes": [
+      "Reduzir o uso de equipamentos durante horários de pico",
+      "Avaliar aparelhos com alto consumo energético",
+      "Distribuir atividades de maior consumo ao longo do dia"
+    ]
+  }
+]
+```
+
+### GET /analises/{id}
+
+Detalhe de uma análise específica.
+
+**Response (200 OK)**: Mesmo schema de `/analises`.
+**Response (404)**: Se o ID não existir.
+
+### GET /dashboard
+
+Resumo agregado das análises do usuário autenticado.
+
+**Response (200 OK)**
+```json
+{
+  "totalAnalises": 12,
+  "mediaConsumoKwh": 350.50,
+  "totalCustoEstimado": 3780.00,
+  "totalEmissaoCo2Kg": 194.19,
+  "consumoPorMes": [
+    { "mes": "2026-01", "consumoKwh": 420.00 },
+    { "mes": "2026-02", "consumoKwh": 380.00 }
+  ]
+}
+```
 
 ## Serviço de Domínio: AnaliseEnergiaService
 

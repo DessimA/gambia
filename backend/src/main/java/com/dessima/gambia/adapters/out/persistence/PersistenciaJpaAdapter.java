@@ -1,9 +1,13 @@
 package com.dessima.gambia.adapters.out.persistence;
 
+import com.dessima.gambia.domain.model.AnaliseHistorico;
 import com.dessima.gambia.domain.model.ResultadoAnalise;
 import com.dessima.gambia.domain.model.SolicitacaoAnalise;
 import com.dessima.gambia.domain.ports.out.PersistenciaPort;
 import java.math.BigDecimal;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
 
@@ -61,5 +65,39 @@ public class PersistenciaJpaAdapter implements PersistenciaPort {
       var entity = new RecomendacaoGeradaEntity(UUID.randomUUID(), analiseId, texto);
       recomendacaoRepository.save(entity);
     }
+  }
+
+  @Override
+  public List<AnaliseHistorico> buscarAnalisesPorUsuario(UUID usuarioId) {
+    var imoveis = imovelRepository.findByUsuarioId(usuarioId);
+    if (imoveis.isEmpty()) return Collections.emptyList();
+
+    var imovelIds = imoveis.stream().map(ImovelEntity::getId).toList();
+    var analises = analiseRepository.findByImovelIdInOrderByCreatedAtDesc(imovelIds);
+
+    return analises.stream().map(this::toHistorico).toList();
+  }
+
+  @Override
+  public Optional<AnaliseHistorico> buscarAnalisePorId(UUID analiseId) {
+    return analiseRepository.findById(analiseId).map(this::toHistorico);
+  }
+
+  private AnaliseHistorico toHistorico(AnaliseConsumoEntity entity) {
+    var recomendacoes =
+        recomendacaoRepository.findByAnaliseId(entity.getId()).stream()
+            .map(RecomendacaoGeradaEntity::getRecomendacaoTexto)
+            .toList();
+    return new AnaliseHistorico(
+        entity.getId(),
+        entity.getCategoria(),
+        entity.getProbabilidade(),
+        entity.getConsumoKwh(),
+        entity.getCustoEstimadoMensal(),
+        entity.getEmissaoCo2Kg(),
+        entity.isUsoHorarioPico(),
+        entity.getHorasAltoConsumo(),
+        entity.getCreatedAt(),
+        recomendacoes);
   }
 }

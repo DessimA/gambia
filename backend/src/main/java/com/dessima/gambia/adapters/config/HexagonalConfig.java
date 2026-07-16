@@ -3,11 +3,13 @@ package com.dessima.gambia.adapters.config;
 import com.dessima.gambia.adapters.out.client.MLServiceClient;
 import com.dessima.gambia.adapters.out.client.MLServiceHttpClient;
 import com.dessima.gambia.domain.ports.in.AutenticacaoUseCase;
+import com.dessima.gambia.domain.ports.in.HistoricoUseCase;
 import com.dessima.gambia.domain.ports.out.MLClientPort;
 import com.dessima.gambia.domain.ports.out.PersistenciaPort;
 import com.dessima.gambia.domain.ports.out.UsuarioRepositoryPort;
 import com.dessima.gambia.domain.service.AnaliseEnergiaService;
 import com.dessima.gambia.domain.service.AutenticacaoService;
+import com.dessima.gambia.domain.service.HistoricoService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -36,5 +38,10 @@ public class HexagonalConfig {
   public AnaliseEnergiaService analiseEnergiaService(
       MLClientPort mlClient, PersistenciaPort persistencia) {
     return new AnaliseEnergiaService(mlClient, persistencia);
+  }
+
+  @Bean
+  public HistoricoUseCase historicoUseCase(PersistenciaPort persistencia) {
+    return new HistoricoService(persistencia);
   }
 }

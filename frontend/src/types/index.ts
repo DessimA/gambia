@@ -47,3 +47,29 @@ export class ApiError extends Error {
     this.campos = campos
   }
 }
+
+export interface AnaliseHistorico {
+  id: string
+  categoria: ClassificacaoEficiencia
+  probabilidade: number
+  consumoKwh: number
+  custoEstimadoMensal: number
+  emissaoCo2Kg: number
+  usoHorarioPico: boolean
+  horasAltoConsumo: number
+  createdAt: string
+  recomendacoes: string[]
+}
+
+export interface ConsumoMensal {
+  mes: string
+  consumoKwh: number
+}
+
+export interface DashboardData {
+  totalAnalises: number
+  mediaConsumoKwh: number
+  totalCustoEstimado: number
+  totalEmissaoCo2Kg: number
+  consumoPorMes: ConsumoMensal[]
+}

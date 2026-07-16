@@ -38,6 +38,8 @@ frontend/src/
 | `/` | Home | Landing page com Hero + Demo + Features + Footer | Público |
 | `/login` | Login | Formulário de login funcional | Público |
 | `/cadastrar` | Cadastrar | Formulário de cadastro funcional | Público |
+| `/dashboard` | Dashboard | Resumo com gráficos e cards de consumo | Autenticado |
+| `/historico` | Historico | Lista de análises anteriores | Autenticado |
 
 ## Temas (Claro/Escuro)
 
@@ -127,9 +129,27 @@ Provedor de contexto que gerencia o estado de autenticação:
 ### PrivateRoute
 
 - Componente que redireciona para `/login` se o usuário não estiver autenticado
-- Renderiza `children` ou `<Outlet />` se autenticado
+- Renderiza `children` se autenticado
+- Ativo nas rotas `/dashboard` e `/historico`
 
 ## Páginas de Autenticação
+
+### Dashboard.tsx
+
+- Cards de resumo: total de análises, média de consumo, custo total, emissão CO2 total
+- Gráfico de barras (recharts) com consumo agregado por mês
+- Botões: "Histórico" (navega para lista), "Nova análise" (volta ao formulário)
+- Redireciona para `/login` se não autenticado
+- Exibe estado vazio com CTA para primeira análise
+
+### Historico.tsx
+
+- Lista todas as análises do usuário ordenadas por data (mais recente primeiro)
+- Cada card exibe: badge de categoria, data, consumo kWh, custo estimado
+- Badge colorido: verde (Eficiente), amarelo (Moderado), vermelho (Ineficiente)
+- Botão "Voltar ao Dashboard" no topo
+- Estado vazio com CTA "Fazer primeira análise"
+- Redireciona para `/login` se não autenticado
 
 ### Login.tsx
 
@@ -165,13 +185,16 @@ async function analisarDemo(data: AnaliseRequest): Promise<AnaliseResponse>
 
 ```typescript
 async function analisarEnergia(data: AnaliseRequest): Promise<AnaliseResponse>
-async function login(email: string, senha: string): Promise<LoginResponse>
-async function cadastrar(nome: string, email: string, senha: string): Promise<LoginResponse>
+async function login(email: string, senha: string): Promise<void>
+async function cadastrar(nome: string, email: string, senha: string): Promise<void>
+async function listarAnalises(): Promise<AnaliseHistorico[]>
+async function buscarDashboard(): Promise<DashboardData>
 ```
 
-- Lê cookie `XSRF-TOKEN` e envia como header `X-XSRF-TOKEN`
+- `authFetch()` auxiliar que lê cookie `XSRF-TOKEN` e envia como header `X-XSRF-TOKEN`
 - Inclui `credentials: include` para cookies de sessão
-- `login()` e `cadastrar()` chamam endpoints de auth com JSON
+- `listarAnalises()` chama `GET /analises`
+- `buscarDashboard()` chama `GET /dashboard`
 
 ## Tipos Compartilhados
 
@@ -196,6 +219,32 @@ interface Usuario {
   id: string
   nome: string
   email: string
+}
+
+interface AnaliseHistorico {
+  id: string
+  categoria: ClassificacaoEficiencia
+  probabilidade: number
+  consumoKwh: number
+  custoEstimadoMensal: number
+  emissaoCo2Kg: number
+  usoHorarioPico: boolean
+  horasAltoConsumo: number
+  createdAt: string
+  recomendacoes: string[]
+}
+
+interface ConsumoMensal {
+  mes: string
+  consumoKwh: number
+}
+
+interface DashboardData {
+  totalAnalises: number
+  mediaConsumoKwh: number
+  totalCustoEstimado: number
+  totalEmissaoCo2Kg: number
+  consumoPorMes: ConsumoMensal[]
 }
 
 type ClassificacaoEficiencia = 'Eficiente' | 'Moderado' | 'Ineficiente'
