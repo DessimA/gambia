@@ -219,8 +219,8 @@ O **GambIA** expõe seus serviços de processamento de forma síncrona através 
   "senha": "minhaSenha123"
 }
 ```
-* **Response 201**: `{ "id": "uuid", "nome": "Maria Silva", "email": "maria@email.com" }` + cookie `SESSION_TOKEN`
-* **Erro 409**: Email já cadastrado.
+* **Response 201**: Corpo vazio + cookie `SESSION_TOKEN`. O frontend chama login em seguida para obter os dados do usuário.
+* **Erro 400**: Email já cadastrado.
 
 ##### `POST /auth/login`
 * **Objetivo**: Autenticar usuário existente.
@@ -233,7 +233,7 @@ O **GambIA** expõe seus serviços de processamento de forma síncrona através 
 }
 ```
 * **Response 200**: `{ "id": "uuid", "nome": "Maria Silva", "email": "maria@email.com" }` + cookie `SESSION_TOKEN`
-* **Erro 401**: Credenciais inválidas.
+* **Erro 400**: Credenciais inválidas.
 
 #### Endpoint Principal: `POST /analise-energetica`
 * **Objetivo**: Receber os dados operacionais do imóvel, acionar os motores de classificação (Machine Learning) e recomendação (IA Generativa) e retornar o diagnóstico consolidado.

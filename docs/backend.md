@@ -142,7 +142,7 @@ Cria um novo usuário. Retorna cookie `SESSION_TOKEN` e dados do usuário.
 }
 ```
 
-Erro: `409 Conflict` se email já cadastrado.
+Erro: `400 Bad Request` se email já cadastrado.
 
 ### POST /auth/login
 
@@ -165,7 +165,7 @@ Autentica usuário existente. Retorna cookie `SESSION_TOKEN` e dados do usuário
 }
 ```
 
-Erro: `401 Unauthorized` se credenciais inválidas.
+Erro: `400 Bad Request` se credenciais inválidas.
 
 ## Serviço de Domínio: AnaliseEnergiaService
 
@@ -201,13 +201,13 @@ Fluxo de login:
 
 - `MethodArgumentNotValidException` -> 400 com mapa de campos
 - `IllegalArgumentException` -> 400 (ex: tipo_imovel inválido)
-- `EmailDuplicadoException` -> 409 Conflict
-- `CredenciaisInvalidasException` -> 401 Unauthorized
+- `IllegalArgumentException` com "E-mail ja cadastrado" -> 400 Bad Request
+- `IllegalArgumentException` com "E-mail ou senha invalidos" -> 400 Bad Request
 - `Exception` -> 500 genérico
 
 ## Testes (JUnit 5 + Mockito + MockMvc + DataJpaTest)
 
-66 testes automatizados divididos em:
+31 testes automatizados no backend (JVM):
 
 | Classe | Qtde | Escopo |
 |--------|------|--------|
@@ -217,5 +217,7 @@ Fluxo de login:
 | `AnaliseControllerTest` | 5 | POST /analise-energetica, validações |
 | `AuthControllerTest` | 5 | POST /auth/cadastrar, POST /auth/login |
 | `UsuarioRepositoryTest` | 4 | Save, findByEmail, unicidade |
+
++ 39 testes no ML Service (pytest), totalizando 70 testes automatizados.
 
 Configuração de teste em `src/test/resources/application-test.yml` com H2 em modo PostgreSQL. Flyway desabilitado em testes (JPA `ddl-auto: create-drop`).
