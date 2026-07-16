@@ -126,10 +126,28 @@
 
 ## Fase 3 - Histórico e Dashboard
 
+### Backend
+
+- [x] Repositories: findByUsuarioId, findByImovelIdIn, findByAnaliseId
+- [x] PersistenciaPort: buscarAnalisesPorUsuario, buscarAnalisePorId
+- [x] HistoricoUseCase + HistoricoService
+- [x] GET /analises (lista análises do usuário autenticado)
+- [x] GET /analises/{id} (detalhe de uma análise)
+- [x] GET /dashboard (stats agregadas: total, média, custo, CO2, consumo por mês)
+- [x] DashboardResponse DTO com ConsumoMensal
+
+### Frontend
+
+- [x] Página Dashboard com cards de resumo (total análises, média consumo, custo total, CO2 total)
+- [x] Gráfico de barras (consumo por mês) via recharts
+- [x] Página Histórico com lista de análises por data
+- [x] PrivateRoute ativo para /dashboard e /historico
+- [x] Navbar com links Dashboard/Histórico quando autenticado
+- [x] Novos tipos: AnaliseHistorico, DashboardData, ConsumoMensal
+- [x] api.ts: listarAnalises(), buscarDashboard()
+
 ### Pendente
 
-- [ ] Página de histórico de análises por usuário
-- [ ] Dashboard com gráficos de consumo ao longo do tempo
 - [ ] Exportar relatório (PDF)
 - [ ] Comparação entre períodos
 - [ ] Metas de economia personalizadas

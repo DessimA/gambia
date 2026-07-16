@@ -12,7 +12,10 @@ export default function Navbar() {
   const { usuario, logout } = useAuth()
 
   const links = usuario
-    ? []
+    ? [
+        { to: '/dashboard', label: 'Dashboard' },
+        { to: '/historico', label: 'Hist\u00f3rico' },
+      ]
     : [
         { to: '/login', label: 'Login' },
         { to: '/cadastrar', label: 'Cadastrar' },

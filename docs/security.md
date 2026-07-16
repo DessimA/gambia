@@ -47,14 +47,14 @@ sequenceDiagram
 #### POST /auth/cadastrar
 
 - **Request**: `{ nome, email, senha }`
-- **Response 201**: `{ id, nome, email }` + cookie `SESSION_TOKEN`
-- **Erros**: 409 se email já cadastrado, 400 se validação falhar
+- **Response 201**: Corpo vazio + cookie `SESSION_TOKEN`. Frontend chama login em seguida para obter dados.
+- **Erros**: 400 se email já cadastrado ou validação falhar
 
 #### POST /auth/login
 
 - **Request**: `{ email, senha }`
 - **Response 200**: `{ id, nome, email }` + cookie `SESSION_TOKEN`
-- **Erros**: 401 se credenciais inválidas
+- **Erros**: 400 se credenciais inválidas
 
 ## CSRF (Double Submit Cookie)
 

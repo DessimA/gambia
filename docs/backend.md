@@ -45,6 +45,7 @@ backend/src/main/java/com/dessima/gambia/
     |   +-- web/
     |       +-- AnaliseController.java    # POST /analise-energetica
     |       +-- AuthController.java       # POST /auth/cadastrar, POST /auth/login
+    |       +-- HistoricoController.java  # GET /analises, GET /analises/{id}, GET /dashboard
     |       +-- GlobalExceptionHandler.java   # Tratamento de erros
     +-- out/                        # Adaptadores de Saída
         +-- client/
@@ -133,16 +134,10 @@ Cria um novo usuário. Retorna cookie `SESSION_TOKEN` e dados do usuário.
 
 **Validações**: nome (obrigatório), email (formato válido), senha (mínimo 6 caracteres).
 
-**Response (201 Created)**
-```json
-{
-  "id": "uuid",
-  "nome": "Maria Silva",
-  "email": "maria@email.com"
-}
-```
+**Response (201 Created)**: Corpo vazio. O cookie `SESSION_TOKEN` é definido na resposta.
+O frontend chama login em seguida para obter `{ id, nome, email }`.
 
-Erro: `409 Conflict` se email já cadastrado.
+Erro: `400 Bad Request` se email já cadastrado.
 
 ### POST /auth/login
 
@@ -165,7 +160,58 @@ Autentica usuário existente. Retorna cookie `SESSION_TOKEN` e dados do usuário
 }
 ```
 
-Erro: `401 Unauthorized` se credenciais inválidas.
+Erro: `400 Bad Request` se credenciais inválidas.
+
+### GET /analises
+
+Lista todas as análises do usuário autenticado (extraído do JWT).
+
+**Response (200 OK)**
+```json
+[
+  {
+    "id": "uuid",
+    "categoria": "Ineficiente",
+    "probabilidade": 0.81,
+    "consumoKwh": 420.00,
+    "custoEstimadoMensal": 315.00,
+    "emissaoCo2Kg": 16.17,
+    "usoHorarioPico": true,
+    "horasAltoConsumo": 8,
+    "createdAt": "2026-07-15T14:24:00Z",
+    "recomendacoes": [
+      "Reduzir o uso de equipamentos durante horários de pico",
+      "Avaliar aparelhos com alto consumo energético",
+      "Distribuir atividades de maior consumo ao longo do dia"
+    ]
+  }
+]
+```
+
+### GET /analises/{id}
+
+Detalhe de uma análise específica.
+
+**Response (200 OK)**: Mesmo schema de `/analises`.
+**Response (404)**: Se o ID não existir.
+
+### GET /dashboard
+
+Resumo agregado das análises do usuário autenticado.
+
+**Response (200 OK)**
+```json
+{
+  "totalAnalises": 12,
+  "mediaConsumoKwh": 350.50,
+  "totalCustoEstimado": 3780.00,
+  "totalEmissaoCo2Kg": 194.19,
+  "consumoPorMes": [
+    { "mes": "2026-01", "consumoKwh": 420.00 },
+    { "mes": "2026-02", "consumoKwh": 380.00 }
+  ]
+}
+```
 
 ## Serviço de Domínio: AnaliseEnergiaService
 
@@ -201,13 +247,13 @@ Fluxo de login:
 
 - `MethodArgumentNotValidException` -> 400 com mapa de campos
 - `IllegalArgumentException` -> 400 (ex: tipo_imovel inválido)
-- `EmailDuplicadoException` -> 409 Conflict
-- `CredenciaisInvalidasException` -> 401 Unauthorized
+- `IllegalArgumentException` com "E-mail ja cadastrado" -> 400 Bad Request
+- `IllegalArgumentException` com "E-mail ou senha invalidos" -> 400 Bad Request
 - `Exception` -> 500 genérico
 
 ## Testes (JUnit 5 + Mockito + MockMvc + DataJpaTest)
 
-66 testes automatizados divididos em:
+31 testes automatizados no backend (JVM):
 
 | Classe | Qtde | Escopo |
 |--------|------|--------|
@@ -217,5 +263,7 @@ Fluxo de login:
 | `AnaliseControllerTest` | 5 | POST /analise-energetica, validações |
 | `AuthControllerTest` | 5 | POST /auth/cadastrar, POST /auth/login |
 | `UsuarioRepositoryTest` | 4 | Save, findByEmail, unicidade |
+
++ 39 testes no ML Service (pytest), totalizando 70 testes automatizados.
 
 Configuração de teste em `src/test/resources/application-test.yml` com H2 em modo PostgreSQL. Flyway desabilitado em testes (JPA `ddl-auto: create-drop`).
